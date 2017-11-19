@@ -149,7 +149,7 @@ void printer_thread(void *arg) {
 			continue;
 		}
 
-		if (fstat(fd, &sbuf)) < 0) {
+		if ((fstat(fd, &sbuf)) < 0) {
 			log_msg("job %ld canceled - can't fstat %s %s",
 			job->jobid, name, strerror(errno));
 			free(jp);
@@ -164,6 +164,8 @@ void printer_thread(void *arg) {
 		}
 
 		icp = ibuf;
+
+		log_msg("send file to printer for print");
     }
 
  defer:
@@ -181,6 +183,24 @@ void printer_thread(void *arg) {
 void * signal_thread(void *arg) {
     int err, signo;
     for (;;) {
-    err = sigwait(&mask, &signo);
+    	err = sigwait(&mask, &signo);
+    	if (err != 0) {
+			log_quit("sigwait failed: %s", strerror(err));
+    	}
+
+		switch (signo){
+		case SIGHUP://重新刷新配置文件
+			phtread_mutex_lock(&configlock);
+			reread = 1;
+			phtread_mutex_unlock(&configlock);
+			break;
+		case SIGTERM:
+			kill_workers();
+			log_msg("terminate with signal %s", strsignal(signo));
+			exit(0);
+		default:
+			kill_workers();
+			log_quit("unexpected signal %d", signo);
+		}
     }
 }
