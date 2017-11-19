@@ -188,8 +188,15 @@ void printer_thread(void *arg) {
 		}
 
 		/**
-		 * 读取打印机响应，如果成功，则删除文件，释放jp
+		 * 获取打印机响应，如果成功，则删除文件，释放jp对应的资源
 		 */
+		if (printer_status(sockfd, jp)){
+			unlink(name);
+			sprintf(name, "%s/%s/%ld", SPOOLDIR, REQDIR, jp->jobid);
+			unlink(name);
+			free(jp);
+			jp = NULL;
+		}
     }
 
  defer:

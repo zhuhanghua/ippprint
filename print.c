@@ -42,9 +42,12 @@ void *client_thread(void *);
 void *printer_thread(void *);
 
 void *signal_thread(void *);
-ssize_t readmore(int, char**, int, int *);
-int printer_status(int, struct job*);
+
 void add_worker(pthread_t, int);
 void kill_workers(void);
 void client_cleanup(void *);
+
+ssize_t readmore(int, char**, int, int *);
+int printer_status(int, struct job*);
+
 
