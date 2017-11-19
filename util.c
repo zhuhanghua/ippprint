@@ -115,6 +115,9 @@ ssize_t tread(int fd, void *buf, size_t nbytes, unsigned int timout){
 	return (read(fd, buf, nbytes));
 }
 
+/**
+ *提供tread的变体, 叫做treadn, 它只正好读取请求的字节数
+ */
 ssize_t
 treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
 	size_t nleft;

@@ -1,50 +1,4 @@
 #include "print.h"
-/**
- *
- */
- ssize_t tread(int fd, void *buf, size_t nbytes, unsigned int timeout){
-    int nfds;
-    fd_set readfds;
-    struct timeval tv;
-    tv.tv_sec = timeout;
-    tv.tv_usec = 0;
-    FD_ZERO(&readfds);
-    FD_SET(fd, &readfds);
-    nfds = select(fd+1, &readfds, NULL, NULL, &tv);
-    if (nfds <= 0) {
-        if (nfds == 0) {
-            errno = ETIME;
-        }
-        return -1;
-    }
-
-    return (read(fd, buf, nbytes));
- }
-
-/**
- *  提供tread的变体, 叫做treadn, 它只正好读取请求的字节数
- */
- ssize_t treadn(int fd, void *buf, size_t nbtytes, unsigned int timeout) {
-    size_t nleft;
-    size_t nread;
-
-    nleft = nbtytes;
-    while(nleft > 0) {
-        if ((nread = tread(fd, buf, nbtytes, timeout)) < 0) {
-            if (nleft == nbtytes) {
-                return -1;
-            }else {
-                break;
-            }
-        }else if (nread == 0) {
-            break; /* EOF */
-        }
-            nleft -= nread;
-            buf += nread;
-    }
-
-    return (nbtytes - nleft);
- }
 
 //当连接请求被接受时，main线程中派生出client_thread, 
 //其作用是从客户print命令中接收要打印的文件。
@@ -161,7 +115,67 @@ void printer_thread(void *arg) {
     char str[64];
 
     for (;;) {
+        /**
+        * Get a job to print
+        */
+        pthread_mutex_lock(&joblock);
+        while(jobhead == NULL){
+            log_msg("printer thread wating...");
+            pthread_cond_wait(&jobwait, &joblock);
+        }
+        remove_job(jp = jobhead);
+        log_msg("printer_thread: picked up job %ld", jp->jobid);
+        pthread_mutex_unlock(&joblock);
+
+        update_jobno();
+
+        pthread_mutex_lock(&configlock);
+        if (reread) {
+			freeaddrinfo(printer);
+			printer = NULL;
+			printer_name = NULL;
+			reread = 0;
+			printer_mutex_unlock(&configlock);
+			init_printer();
+        }else{
+        	pthread_mutex_unlock(&configlock);
+		}
+
+		sprintf(name, "%s/%s/%ld", SPOOLDIR, DATADIR, jp->jobid);
+		if ((fd = open(name, O_RDONLY)) < 0) {
+			log_msg("job %ld canceled - can't open %s: %s", 
+			job->jobid, name, strerror(errno));
+			free(jp);
+			continue;
+		}
+
+		if (fstat(fd, &sbuf)) < 0) {
+			log_msg("job %ld canceled - can't fstat %s %s",
+			job->jobid, name, strerror(errno));
+			free(jp);
+			close(fd);
+			continue;
+		}
+
+		if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
+			log_msg("job %ld deferred - can't create socket: %s",
+			jp->jobid, strerror(errno));
+			goto defer;
+		}
+
+		icp = ibuf;
     }
+
+ defer:
+ 	closed(fd);
+ 	if (sockfd >= 0) {
+		close(sockfd);
+ 	}
+
+ 	if (jp != NULL) {
+		replace_job(jp);
+		sleep(60);
+ 	}
 }
 
 void * signal_thread(void *arg) {
