@@ -48,7 +48,7 @@ struct printreq {
 	char jobjnm[JOBNM_MAX];
 };
 
-#define PR_TEXT 0x01
+#define PR_TEXT 0x01 //纯文本格式
 
 struct printresp {
 	long retcode;

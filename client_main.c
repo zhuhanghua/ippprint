@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	while ((c = getopt(argc, argv, "t")) != -1) {
 		switch(c) {
 		case 't': 
-			text = 1;
+			text = 1;//按照文本方式打印
 			break;
 		case '?':
 			err = 1;
@@ -93,7 +93,75 @@ int main(int argc, char *argv[]) {
 
 	errno = err;
 	err_ret("print: can't contact %s", host);
+	exit(1);
 }
 
+/**
+ * 将文件传动到打印假脱机守护进程
+ */
 void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text){
+	int nr, nw, len;
+	struct passwd *pwd;
+	struct printreq req;
+	struct printresp res;
+	char buf[IOBUFSZ];
+
+	/**
+	 * 首先建立请求首部
+	 */
+	if ((pwd = getpwuid(geteuid())) == NULL) {
+		strcpy(req.usernm, "unknown");
+	}else {
+		strcpy(req.usernm, pwd->pw_name);
+	}
+
+	req.size = htonl(nbytes);
+	if (text) {
+		req.flags = htonl(PR_TEXT);//纯文本格式
+	}else {
+		req.flags = 0;
+	}
+
+	strcpy(req.jobjnm, fname);
+
+ 	/**
+ 	 * 发送文件头到守护进程
+ 	 */
+	nw = writen(sockfd, &req, sizeof(struct printreq));
+	if (nw != sizeof(struct printreq)) {
+		if (nw < 0) {
+			err_sys("can't write to print server");
+		} else {
+			err_quit("short write (%d/%d) to print server", nw,  sizeof(struct printreq));
+		}
+	}
+
+ 	/**
+ 	 * 发送文件到守护进程
+ 	 */
+	while( (nr = read(fd, buf, IOBUFSZ)) != 0) {
+		nw = writen(sockfd ,buf, nr);
+		if (nw != nr) {
+			if (nw < 0) {
+				err_sys("can't write to print server");
+			}else{
+				err_quit("short write (%d/%d) to print server", nw, nr);
+			}
+		}
+	}
+
+	/**
+ 	 * 获取响应
+ 	 */
+ 	if ((nr = readn(sockfd, &res, sizeof(struct printresp))) != sizeof(struct printresp)){
+		err_sys("cant't read response from server");
+ 	}
+
+ 	if (res.retcode != 0) {
+		printf("rejected: %s\n", res.msg);
+ 	}else {
+		printf("job Id %d", ntonl(res.jobid));
+ 	}
+
+ 	exit(0);
 }

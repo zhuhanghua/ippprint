@@ -80,6 +80,56 @@ errout:
 	return -1;
 }
 
+/**
+ * 当守护进程程序启动时，调用build_qonstart从存储在/var/spool/printer/reqs中的磁盘文件建立
+ * 一个内存中的打印作业列表。如果不能打开该目录，表示没有打印作业要处理
+ */
+void build_qonstart(void) {
+	int fd, err, nr;
+	long jobid;
+	DIR *dirp;
+	struct dirent *entp;
+	struct printreq req;
+	char dname[FILENMSZ], fname[FILENMSZ];
+
+	sprintf(dname, "%s/%s", SPOOLDIR, REQDIR);
+	if ((dirp = opendir(dname)) == NULL)
+		return;
+	
+	while((entp = readdir(dirp, ".")) != NULL) {
+		if (strcmp(entp->d_name, ".") == 0 || strcmp(entp->d_name, "..") == 0) {
+			continue;
+		}
+
+		sprintf(fname, "%s/%s/%s", SPOOLDIR, REQDIR, entp->d_name);
+		if ((fd = open(fname, O_RDONLY)) < 0) {
+			continue;
+		}
+
+		//读取保存在文件中的printreq结构
+		nr = read(fd, &req, sizeof(struct printreq));
+		if (nr != sizeof(struct printreq)) {
+			if (nr < 0) {
+				err = errno;
+			}else {
+				err = EIO;
+			}
+
+			close(fd);
+			log_msg("build_qonstart: can't read %s: %s", fname, strerror(err));
+			unlink(fname);
+			sprintf(fname, "%s/%s/%s", SPOOLDIR, DATADIR, entp->d_name);
+			unlink(fname);
+			continue;
+		}
+		//将文件名转化为作业ID
+		jobid = atol(entp->d_name);
+		log_msg("adding job %ld to queue", jobid);
+		//将请求加入到挂起的打印作业列表 
+		add_job(&req, jobid);
+	}		
+}
+
 int main(int argc, char *argv[]) {
 	pthread_t tid;
 	struct addrinfo *ailist, *aip;
