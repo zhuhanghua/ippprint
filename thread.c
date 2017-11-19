@@ -1,4 +1,5 @@
 #include "print.h"
+#include "ipp.h"
 
 //当连接请求被接受时，main线程中派生出client_thread, 
 //其作用是从客户print命令中接收要打印的文件。
@@ -104,15 +105,12 @@ void * client_thread(void *arg) {
 void printer_thread(void *arg) {
     struct job *jp;
     int hlen, ilen, sockfd, fd, nr, nw;
-    char *icp, *hcp;
-    struct ipp_hdr *hp;
     struct stat sbuf;
-    struct ipvec iov[2];
+	struct ipvec iov[2];
+	char ibuf[IBUFSZ];
+	char hbuf[HBUFSZ];
     char name[FILENMSZ];
-    char hbuf[HBUFSZ];
-    char ibuf[IBUFSZ];
     char buf[IOBUFSZ];
-    char str[64];
 
     for (;;) {
         /**
@@ -163,9 +161,35 @@ void printer_thread(void *arg) {
 			goto defer;
 		}
 
-		icp = ibuf;
-
 		log_msg("send file to printer for print");
+		setup_ipp_header(jp, iov, ibuf);
+		setup_http_header(jp, iov, hbuf, sbuf);
+
+		if ((nw = writev(sockfd, iov, 2)) != hlen + ilen) {
+			log_ret("can't write to printer");
+			goto defer;
+		}
+
+		//读取数据文件并发送给打印机
+		while((nr = read(fd, buf, IOBUFSZ)) > 0) {
+			if ((nw = write(sockfd, buf, nr)) != nr) {
+				if (nw < 0) {
+					log_ret("can't write to printer");
+				}else {
+					log_msg("short write (%d/%d) to printer", nw, nr);
+				}
+				goto defer;
+			}
+		}
+
+		if (nr < 0) {
+			log_ret("can't read %s", name);
+			goto defer;
+		}
+
+		/**
+		 * 读取打印机响应，如果成功，则删除文件，释放jp
+		 */
     }
 
  defer:

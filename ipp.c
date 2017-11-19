@@ -14,80 +14,75 @@
 #define HTTP_INFO(x)  ((x)>=100 && (x) <= 199)
 #define HTTP_SUCCESS(x)  ((x)>=200 && (x) <= 299)
 
-struct job {
-	struct job *next;
-	struct job *prev;
-	long  jobid;
-	struct printreq req;
-};
-
-struct worker_thread {
-	struct worker_thread *next;
-	struct worker_thread *prev;
-	pthread_t  tid;
-	int  sockfd;
-};
-
-int log_to_stderr = 0;
-
-struct addrinfo *printer;//保存打印机的网络地址
-char  *printer_name;//保存打印机的主机名字
-phtread_mutex_t  configlock = PTHREAD_MUTEX_INITIALIZER;//用于保护对reread变量的访问
-int  reread;
-
-struct worker_thread *workers;
-pthread_mutex_t  workerlock = PTHREAD_MUTEX_INITIALIZER;
-sigset_t mask;
-struct job  *jobhead, *jobtail;
-int  jobfd;	//jobfd是作业文件的文件描述符
-
-long nextjob;
-pthread_mutext_t  joblock = PTHREAD_MUTEX_INITIALIZER;
-pthread_cond_t  jobwait = PTHREAD_COND_INITIALIZER;
-
-void init_request(void);
-void init_printer(void);
-void update_jobno(void);
-long get_newjobno(void);
-void add_job(struct printreq *, long);
-void replace_job(struct job *);
-void remove_job(struct job *);
-void build_qonstart(void);
-void *client_thread(void *);
-void *printer_thread(void *);
-
-void *signal_thread(void *);
-ssize_t readmore(int, char**, int, int *);
-int printer_status(int, struct job*);
-void add_worker(pthread_t, int);
-void kill_workers(void);
-void client_cleanup(void *);
 
 
+/**
+ * 添加一个选项到IPP 头部
+ */
+char* add_option(char* cp, int tag, char* optname, char *optval) {
+	int n;
+	union {
+		int16_t s;
+		char c[2];
+	}u;
 
-void update_jobno(void) {
-	char buf[32];
-
-	lseek(jobfd, 0, SEEK_SET);
-	sprintf(buf, "%ld", nextjob);
-	if (write(jobfd, buf, strlen(buf)) <0) {
-		log_sys("can't update job file");
-	}
+	*cp ++ = tag;
+	n = strlen(optname);
+	u.s = htons(n);
+	*cp ++= u.c[0];
+	*cp ++ = u.c[1];
+	strcpy(cp, optname);
+	cp += n;
+	n = strlen(optval);
+	u.s = htons(n);
+	*cp ++ = u.c[0];
+	*cp ++ = u.c[1];
+	strcpy(cp, optval);
+	return (cp + n);
 }
 
-long get_newjobno(void) {
-	long jobid;
+void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
+    char *icp;
+    struct ipp_hdr *hp;
+   
+    char str[64];
 
-	pthread_mutex_lock(&joblock);
-	jobid = nextjob ++;
-	if (nextjob <= 0) {
-		nextjob = 1;
-	}
+	icp = ibuf;
+	hp = (struct ipp_hdr *)icp;
+	hp->major_version = 1;
+	hp->minor_version = 1;
+	hp->operation = htons(OP_PRINT_JOB);
+	hp->request_id = htonl(jp->jobid);
+	icp += offsetof(struct ipp_hdr, attr_group);
+	*icp++ = TAG_OPERATION_ATTR;
+	icp = add_option(icp, TAG_CHARSET, "attributes-charset", "utf-8");
+	icp = add_option(icp, TAG_NATULANG, "attributes-natural-language", "en-us");
+	sprintf(str, "http://%s:%d", printer_name, IPP_PORT);
+	icp = add_option(icp, TAG_URI, "printer-uri", str);
 
-	pthread_mutex_unlock(&joblock);
-
-	return jobid;
+	*icp ++ = TAG_END_OF_ATTR;
+	iov[1].iov_base = ibuf;
+	iov[1].iov_len = icp - ibuf;
 }
+
+void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct stat* sbuf) {
+	char *hcp;
+	hcp = hbuf;
+
+	sprintf(hcp, "POST /%s/ipp HTTP/1.1 \r\n", printer_name);
+	hcp += strlen(hcp);
+	sprintf(hcp, "Content-Lenght: %ld\r\n", (long)sbuf.st_size + iov[1].ilen);
+	hcp += strlen(hcp);
+	sprintf(hcp, "Host: %s:%d\r\n", printer_name, IPP_PORT);
+	hcp += strlen(hcp);
+	*hcp ++ = '\r';
+	*hcp ++ = '\n';
+	iov[0].iov_base = hbuf;
+	iov[0].iov_len = hcp - hbuf;
+}
+
+
+
 
 
 

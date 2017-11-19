@@ -1,5 +1,29 @@
 #include "print.h"
 
+void update_jobno(void) {
+	char buf[32];
+
+	lseek(jobfd, 0, SEEK_SET);
+	sprintf(buf, "%ld", nextjob);
+	if (write(jobfd, buf, strlen(buf)) <0) {
+		log_sys("can't update job file");
+	}
+}
+
+long get_newjobno(void) {
+	long jobid;
+
+	pthread_mutex_lock(&joblock);
+	jobid = nextjob ++;
+	if (nextjob <= 0) {
+		nextjob = 1;
+	}
+
+	pthread_mutex_unlock(&joblock);
+
+	return jobid;
+}
+
 void add_job(struct printreq *reqp, long jobid) {
 	struct job *jp;
 	if ((jp = malloc(sizeof(struct job))) == NULL) {
