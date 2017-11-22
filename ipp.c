@@ -14,8 +14,6 @@
 #define HTTP_INFO(x)  ((x)>=100 && (x) <= 199)
 #define HTTP_SUCCESS(x)  ((x)>=200 && (x) <= 299)
 
-
-
 /**
  * 添加一个选项到IPP 头部
  */
@@ -107,10 +105,11 @@ ssize_t readmore(int sockfd, char * *bpp, int off, int *bszp){
 int printer_status(int sockfd, struct job * jp){
 	int i, success, code, len, found, bufsz;
 	long jobid;
-	ssize_t nr;
+	ssize_t nr;//读取打印机数据缓冲区后返回的大小
 	char *statcode, *reason, *cp, *contentlen;
 	struct ipp_hdr *hp;
-	char *bp;
+	char *bp;//目标缓冲区首地址
+	char *cp;//目标缓冲区定位指针
 
 	success = 0;
 	bufsz = IOBUFSZ;
@@ -123,24 +122,28 @@ int printer_status(int sockfd, struct job * jp){
 	 */
 	while((nr = tread(sockfd, bp, IOBUFSZ, 5)) > 0){
 	    /**
-	     *跳过http 1.1
+	     *跳过字符串"http 1.1"
 	     */
 		cp = bp + 8;
-		while(isspace((int)*cp) {
+		while(isspace((int)*cp)) {
 			cp ++;
 		}
-		
+
+		/** 
+		 * 读取状态码
+		 */
 		statcode = cp;
 		while(isdigit((int)*cp)) {
 			cp ++;
 		}
-
+		
 		if (cp == statcode) {
+			/* 其后应该是数字的状态码，如果不是，在日志中记录报文的内容 */
 			log_msg(bp);
 		}else {
 			*cp ++ = '\0';
-			reason = cp;
-			while(*cp != '\r' && *cp != '\0') {
+			reason = cp; /* 记录出错的消息原因 */
+			while(*cp != '\r' && *cp != '\n') {
 				cp ++;
 			}
 			*cp = '\0';
@@ -154,12 +157,12 @@ int printer_status(int sockfd, struct job * jp){
 				log_msg("error: %s", reason);
 				break;
 			}
-			
+
+			/**
+			 * 搜索Content-Length 属性: 先检查字符是否为‘C’或者‘c’.如果是，则与Content-Lenght比较
+		     */			
 			i = cp - bp;
 			for (;;){
-				/**
-				  * 搜索Content-Length 属性: 先检查字符是否为‘C’或者‘c’.如果是，则与Content-Lenght比较
-				  */
 				while(*cp != 'C' && *cp != 'c' && i < nr) {
 					cp ++;
 					i ++;
@@ -188,12 +191,57 @@ int printer_status(int sockfd, struct job * jp){
 					i ++;
 				}
 			}
+
+			if (i >= nr && (nr = readmore(sockfd, &bp, i, &bufsz)) < 0) {
+				goto out;
+			}
+
+			cp = &bp[i];
+
+			//搜索HTTP首部结束部分的一个空白行
+			found = 0;
+			while (!found) {
+				while(i < nr -2) {
+					if (*cp == '\n' && *(cp + 1) == '\r' && *(cp + 2) == '\n') {
+						found = 1;
+						cp += 3;
+						i += 3;
+						break;
+					}
+					cp ++;
+					i ++;
+				}
+				if (i >= nr && (nr = readmore(sockfd, &bp, i, &bufsz))){
+					goto out;
+				}
+				cp = &bp[i];
+			}
+
+			//继续搜索HTTP首部的结尾
+			if (nr - i < len && ((nr = readmore(sockfd, &bp, i, &bufsz)) < 0)) {
+				goto out;
+			}
+
+			hp = (struct ipp_hdr*)cp;
+			i = ntohs(hp->status);
+			jobid = ntonl(hp->request_id);
+			if (jobid != jp->jobid) {
+				log_msg("jobid %ld status code %d", jobid, i);
+				break;
+			}
+
+			if (STATCLASS_OK(i)) {
+				success = -1;
+			}
+			break;
 		}
 	}
+	
 out:
 	free(bp);
 	if (nr < 0) {
-		log_msg("jobid %ld: error reading printer response: %s", jobid, strerror(error));
+		log_msg("jobid %ld: error reading printer response: %s", 
+			jobid, strerror(error));
 	}
 
 	return (success);
