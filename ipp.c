@@ -1,13 +1,9 @@
-#include "apue.h"
+//#include "apue.h"
 #include "print.h"
+#include "print.c"
 #include "ipp.h"
+#include "apue.h"
 
-#include <fcntl.h>
-#include <dirent.h>
-#include <ctype.h>
-#include <pwd.h>
-#include <pthread.h>
-#include <strings.h>
 #include <sys/select.h>
 #include <sys/uio.h>
 
@@ -59,8 +55,8 @@ void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
 	icp = add_option(icp, TAG_URI, "printer-uri", str);/*打印机的统一资源标识符*/
 
 	*icp ++ = TAG_END_OF_ATTR;
-	iov[1].iov_base = ibuf;
-	iov[1].iov_len = icp - ibuf;
+	iov[1]->iov_base = ibuf;
+	iov[1]->iov_len = icp - ibuf;
 }
 
 void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct stat* sbuf) {
@@ -69,16 +65,16 @@ void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct st
 
 	sprintf(hcp, "POST /%s/ipp HTTP/1.1 \r\n", printer_name);
 	hcp += strlen(hcp);
-	sprintf(hcp, "Content-Length: %ld\r\n", (long)sbuf.st_size + iov[1].iov_len);
+	sprintf(hcp, "Content-Length: %ld\r\n", (long)sbuf->st_size + iov[1]->iov_len);
 	hcp += strlen(hcp);
 	strcpy(hcp, "Content-Type: application/ipp\r\n");
-	hcp += strlen(hcp)
+	hcp += strlen(hcp);
 	sprintf(hcp, "Host: %s:%d\r\n", printer_name, IPP_PORT);
 	hcp += strlen(hcp);
 	*hcp ++ = '\r';
 	*hcp ++ = '\n';
-	iov[0].iov_base = hbuf;
-	iov[0].iov_len = hcp - hbuf;
+	iov[0]->iov_base = hbuf;
+	iov[0]->iov_len = hcp - hbuf;
 }
 
 ssize_t readmore(int sockfd, char * *bpp, int off, int *bszp){
@@ -184,7 +180,7 @@ int printer_status(int sockfd, struct job * jp){
 					while(isdigit((int)*cp)) {
 						cp ++;
 					}
-					cp ++ = '\0';
+					*cp ++ = '\0';
 					i = cp - bp;
 					len = atoi(contentlen);
 					break;
@@ -243,7 +239,7 @@ out:
 	free(bp);
 	if (nr < 0) {
 		log_msg("jobid %ld: error reading printer response: %s", 
-			jobid, strerror(error));
+			jobid, strerror(errno));
 	}
 
 	return (success);

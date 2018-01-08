@@ -1,5 +1,7 @@
 #include "print.h"
 #include "ipp.h"
+#include "print.c"
+#include "apue.h"
 
 //当连接请求被接受时，main线程中派生出client_thread, 
 //其作用是从客户print命令中接收要打印的文件。
@@ -142,14 +144,14 @@ void printer_thread(void *arg) {
 		sprintf(name, "%s/%s/%ld", SPOOLDIR, DATADIR, jp->jobid);
 		if ((fd = open(name, O_RDONLY)) < 0) {
 			log_msg("job %ld canceled - can't open %s: %s", 
-			job->jobid, name, strerror(errno));
+			jp->jobid, name, strerror(errno));
 			free(jp);
 			continue;
 		}
 
 		if ((fstat(fd, &sbuf)) < 0) {
 			log_msg("job %ld canceled - can't fstat %s %s",
-			job->jobid, name, strerror(errno));
+			jp->jobid, name, strerror(errno));
 			free(jp);
 			close(fd);
 			continue;

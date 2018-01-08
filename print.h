@@ -9,6 +9,7 @@
 
 #include <netdb.h>
 #include <errno.h>
+#include <sys/stat.h>
 
 #define CONFIG_FILE "etc/printer.conf"
 #define SPOOLDIR "/var/spool/printer"

@@ -1,4 +1,7 @@
-
+#include "ipp.h"
+#include "print.h"
+#include "apue.h"
+#include "print.c"
 
 void init_request(void) {
 	int n;
@@ -6,7 +9,7 @@ void init_request(void) {
 
 	sprintf(name, "%s/%s", SPOOLDIR, JOBFILE);
 	//初始化文件描述符
-	jobfd = open(name, O_CREATE|O_RDWR, S_IRUSR|S_IWUSR);
+	jobfd = open(name, O_CREAT|O_RDWR, S_IRUSR|S_IWUSR);
 
 	//放一个记录锁
 	if (write_lock(jobfd, 0, SEEK_SET, 0)< 0){
@@ -62,20 +65,21 @@ int initserver() {
 	memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero)); 
 	
 	//绑定套接字与地址信息
-	if (bind(sockfd, (struct sockaddr_in*)&serveraddr, sizeof(serveraddr)) == -1) {
+	int listenfd = bind(sockfd, (struct sockaddr_in*)&serveraddr, sizeof(serveraddr));
+	if (listenfd == -1) {
 		err = errno;
 		goto errout;
 	}
 
 	//监听，宣告可以接受连接请求
-	if (listen(serveraddr, 128) == -1) {
+	if (listen(listenfd, 128) == -1) {
 		err = errno;
 		goto errout;
 	}
 
 	return sockfd;
 errout: 
-	close(fd);
+	close(sockfd);
 	errno = err;
 	return -1;
 }
@@ -140,14 +144,14 @@ int main(int argc, char *argv[]) {
 	struct passwd *pwdp;
 
 	//初始化守护进程程序
-	if (argc ！= 1) {
+	if (argc != 1) {
 		err_quit("usage: printd");
 	}
 
 	daemonize("printd");
 	sigemptyset(&sa.sa_mask);
-	ss.sa_flags = 0;
-	ss.sa_handler = SIG_IGN;
+	sa.sa_flags = 0;
+	sa.sa_handler = SIG_IGN;
 	if (sigaction(SIGPIPE, &sa, NULL) < 0) {
 		log_sys("sigaction failed");
 	}

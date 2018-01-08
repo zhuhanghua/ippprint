@@ -1,8 +1,8 @@
 #include "apue.h"
 #include "print.h"
 
-#include <fcntl.h>
-#include <pwd.h>
+extern int optind, opterr, optopt;
+extern char *optarg;
 
 int log_to_stderr = 1;
 

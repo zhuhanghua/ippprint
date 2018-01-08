@@ -1,4 +1,6 @@
 #include "print.h"
+#include "print.c"
+#include "apue.h"
 
 void update_jobno(void) {
 	char buf[32];

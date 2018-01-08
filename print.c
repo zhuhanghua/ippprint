@@ -1,3 +1,5 @@
+#include <pthread.h>
+#include "print.h"
 
 struct job {
 	struct job *next;
@@ -17,7 +19,7 @@ int log_to_stderr = 0;
 
 struct addrinfo *printer;//保存打印机的网络地址
 char  *printer_name;//保存打印机的主机名字
-phtread_mutex_t  configlock = PTHREAD_MUTEX_INITIALIZER;//用于保护对reread变量的访问
+pthread_mutex_t  configlock = PTHREAD_MUTEX_INITIALIZER;//用于保护对reread变量的访问
 int  reread;
 
 struct worker_thread *workers;
@@ -27,7 +29,7 @@ struct job  *jobhead, *jobtail;
 int  jobfd;	//jobfd是作业文件的文件描述符
 
 long nextjob;
-pthread_mutext_t  joblock = PTHREAD_MUTEX_INITIALIZER;
+pthread_mutex_t  joblock = PTHREAD_MUTEX_INITIALIZER;
 pthread_cond_t  jobwait = PTHREAD_COND_INITIALIZER;
 
 void init_request(void);

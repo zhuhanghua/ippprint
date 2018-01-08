@@ -1,7 +1,5 @@
 #include "apue.h"
 #include "print.h"
-
-#include <cytpe.h>
 #include <sys/select.h>
 
 #define MAXCFGLINE 512
@@ -77,7 +75,8 @@ struct addrinfo* get_printaddr(void) {
     struct addrinfo *ailist;
 
     if ((p = scan_configfile("printer")) != NULL) {
-        if ((err = getaddrlist(p, "ipp", ailist)) != 0) {
+        if ((err = getaddrlist(p, "ipp", ailist)) != 0) {
+
             log_msg("no address information for %s", p);
             return (NULL);
         }
@@ -104,7 +103,8 @@ ssize_t tread(int fd, void *buf, size_t nbytes, unsigned int timout){
 
     /*使用select 用于确定一个或者多个套接字的状态，等待指定的文件描述符可读*/
     nfds = select(fd+1, &readfds, NULL, NULL, &tv);
-    if (nfds <= 0) {
+    if (nfds <= 0) {
+
         if (nfds == 0){
             errno = ETIME;//超时
         }
@@ -125,7 +125,7 @@ treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
 
     nleft = nbytes;
     while (nleft > 0) {
-		if (nread = tread(fd, buf, nleft, timeout)) < 0) {
+		if (nread = tread(fd, buf, nleft, timeout) < 0) {
 			if (nleft == nbytes) {
 			    return -1;
 			}else{
@@ -136,7 +136,7 @@ treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
 		}
 
         nleft -= nread;
-        buf += nread;
+        (char*)buf += nread;
     }
 
     return (nbytes - nleft);
