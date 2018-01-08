@@ -42,11 +42,11 @@ void add_job(struct printreq *reqp, long jobid) {
 
 	jobtail = jp;
 	pthread_mutex_unlock(&joblock);
-	pthread_cond_signal(&jobwait);//ÐÅºÅËø£¬Í¨ÖªµÈ´ý´òÓ¡µÄÏß³Ì
+	pthread_cond_signal(&jobwait);//ä¿¡å·é”ï¼Œé€šçŸ¥ç­‰å¾…æ‰“å°çš„çº¿ç¨‹
 }
 
 /**
- * ÓÃÓÚ½«×÷Òµ²åÈëµ½¹ÒÆðÁÐ±íÍ·²¿
+ * ç”¨äºŽå°†ä½œä¸šæ’å…¥åˆ°æŒ‚èµ·åˆ—è¡¨å¤´éƒ¨
  */
 void replace_job(struct job* jp) {
 	pthread_mutex_lock(&joblock);
@@ -64,8 +64,8 @@ void replace_job(struct job* jp) {
 }
 
 /**
- * ½«×÷Òµ´Ó¹ÒÆðµÄ×÷ÒµÁÐ±íÖÐÉ¾³ý
- * µ÷ÓÃÕß±ØÐë³ÖÓÐjoblock»¥³âÁ¿
+ * å°†ä½œä¸šä»ŽæŒ‚èµ·çš„ä½œä¸šåˆ—è¡¨ä¸­åˆ é™¤
+ * è°ƒç”¨è€…å¿…é¡»æŒæœ‰joblockäº’æ–¥é‡
  */
 void remove_job(struct job *target) {
 	if (target->next != NULL) {

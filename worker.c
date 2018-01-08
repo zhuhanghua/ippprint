@@ -1,9 +1,9 @@
 #include "print.h"
 /**
- * ½«Ò»¸öworker_thread½á¹¹¼ÓÈëµ½»î¶¯Ïß³ÌÁĞ±íÖĞ¡£
+ * å°†ä¸€ä¸ªworker_threadç»“æ„åŠ å…¥åˆ°æ´»åŠ¨çº¿ç¨‹åˆ—è¡¨ä¸­ã€‚
  */
 void add_worker(pthread_t tid, int sockfd) {
-	//·ÖÅä¸Ã½á¹¹ĞèÒªÄÚ´æ, ²¢³õÊ¼»¯
+	//åˆ†é…è¯¥ç»“æ„éœ€è¦å†…å­˜, å¹¶åˆå§‹åŒ–
 	struct worker_thread *wtp;
 	if ((wtp = malloc(sizeof(struct worker_thread))) == NULL) {
 		pthread_exit((void *)1);
@@ -35,7 +35,7 @@ void kill_workers(void) {
 }
 
  /**
- * Ïß³ÌÇåÀí³ÌĞò, ÓÃÓÚ¿ÉÔ¤¼û»òÕß²»¿ÉÔ¤¼ûµÄµ±Ç°Ïß³ÌÍË³öÊ±Ö´ĞĞ
+ * çº¿ç¨‹æ¸…ç†ç¨‹åº, ç”¨äºå¯é¢„è§æˆ–è€…ä¸å¯é¢„è§çš„å½“å‰çº¿ç¨‹é€€å‡ºæ—¶æ‰§è¡Œ
  */
 void client_cleanup(void * arg) {
     struct worker_thread *wtp;

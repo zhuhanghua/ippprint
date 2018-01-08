@@ -1,3 +1,6 @@
+/**
+ * 包含IPP定义的头文件
+ */
 #ifndef _IPP_H_
 #define _IPP_H_
 
@@ -15,6 +18,11 @@
 #define TAG_END_OF_ATTR      0x03	/* end of attributes tag */
 #define TAG_PRINTER_ATTR     0x04	/* printer attributes tag */
 #define TAG_UNSUPP_ATTR      0x05	/* unsupported attributes tag */
+
+/**
+ * Operation IDs 操作码
+ */
+#define OP_PRINT_JOB 0x02
 
 /*
  * Value Tags.
@@ -42,15 +50,15 @@
 
 
 struct ipp_hdr {
-	int8_t major_version;
+	int8_t major_version;/*版本号*/
 	int8_t minor_version;
 	union {
-		int16_t op;
-		int16_t st;
+		int16_t op;/*操作码*/
+		int16_t st;/*状态码*/
 	}u;
 
-	int32_t request_id;
-	char attr_group[1];//����ṹ������һ����־λ��Ϊ�ֽ�
+	int32_t request_id;//请求ID
+	char attr_group[1];//定义结构体的最后一个标志位作为分界
 };
 
 struct ipvec{

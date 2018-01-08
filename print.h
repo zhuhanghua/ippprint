@@ -20,6 +20,7 @@
 
 #define USERNM_MAX 64
 #define JOBNM_MAX 256
+#define MSGLEN_MAX 512
 
 #ifndef HOST_NAME_MAX
 #define HOST_NAME_MAX 256
@@ -27,9 +28,9 @@
 
 #define IPP_PORT 631
 #define QLEN 10
-#define IBUFSZ 512     /* IPP Í·²¿´óĞ¡ */
-#define HBUFSZ 512     /* HTTP Í·²¿´óĞ¡ */
-#define IOBUFSZ 8192  /* ´«ÊäÊı¾İ»º³åÇø´óĞ¡ */
+#define IBUFSZ 512     /* IPP å¤´éƒ¨å¤§å° */
+#define HBUFSZ 512     /* HTTP å¤´éƒ¨å¤§å° */
+#define IOBUFSZ 8192  /* ä¼ è¾“æ•°æ®ç¼“å†²åŒºå¤§å° */
 
 #define FILEPERM (S_IRUSR|S_IWUSR)
 
@@ -44,11 +45,11 @@ extern int initserver(int, struct sockadr*, socklen_t, int);
 struct printreq {
 	long size;
 	long flags;
-	char usenm[USERNM_MAX];
+	char usernm[USERNM_MAX];
 	char jobjnm[JOBNM_MAX];
 };
 
-#define PR_TEXT 0x01 //´¿ÎÄ±¾¸ñÊ½
+#define PR_TEXT 0x01 //çº¯æ–‡æœ¬æ ¼å¼
 
 struct printresp {
 	long retcode;

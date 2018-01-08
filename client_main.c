@@ -30,7 +30,7 @@ int connect_retry(int sockfd, const struct sockaddr *addr, socklen_t alen)
         /*
         * Delay before trying again.
         */
-        if(nsec <= MAXSEELP/2)
+        if(nsec <= MAXSLEEP/2)
             sleep(nsec);
     }
     return(-1);
@@ -47,7 +47,7 @@ int main(int argc, char *argv[]) {
 	while ((c = getopt(argc, argv, "t")) != -1) {
 		switch(c) {
 		case 't': 
-			text = 1;//°´ÕÕÎÄ±¾·½Ê½´òÓ¡
+			text = 1;//æŒ‰ç…§æ–‡æœ¬æ–¹å¼æ‰“å°
 			break;
 		case '?':
 			err = 1;
@@ -67,7 +67,7 @@ int main(int argc, char *argv[]) {
 		err_quit("print: can't open %s\n", argv[1]);
 	}
 
-	//ÎÄ¼þÊÇÒ»¸öÆÕÍ¨ÎÄ¼þ
+	//æ–‡ä»¶æ˜¯ä¸€ä¸ªæ™®é€šæ–‡ä»¶
 	if (!(S_ISREG(sbuf.st_mode))) {
 		err_quit("print: %s must be a regular file\n", argv[1]);
 	}
@@ -97,7 +97,7 @@ int main(int argc, char *argv[]) {
 }
 
 /**
- * ½«ÎÄ¼þ´«¶¯µ½´òÓ¡¼ÙÍÑ»úÊØ»¤½ø³Ì
+ * å°†æ–‡ä»¶ä¼ é€åˆ°æ‰“å°å‡è„±æœºå®ˆæŠ¤è¿›ç¨‹
  */
 void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text){
 	int nr, nw, len;
@@ -107,7 +107,7 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
 	char buf[IOBUFSZ];
 
 	/**
-	 * Ê×ÏÈ½¨Á¢ÇëÇóÊ×²¿
+	 * é¦–å…ˆå»ºç«‹è¯·æ±‚é¦–éƒ¨
 	 */
 	if ((pwd = getpwuid(geteuid())) == NULL) {
 		strcpy(req.usernm, "unknown");
@@ -117,7 +117,7 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
 
 	req.size = htonl(nbytes);
 	if (text) {
-		req.flags = htonl(PR_TEXT);//´¿ÎÄ±¾¸ñÊ½
+		req.flags = htonl(PR_TEXT);//çº¯æ–‡æœ¬æ ¼å¼
 	}else {
 		req.flags = 0;
 	}
@@ -125,7 +125,7 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
 	strcpy(req.jobjnm, fname);
 
  	/**
- 	 * ·¢ËÍÎÄ¼þÍ·µ½ÊØ»¤½ø³Ì
+ 	 * å‘é€æ–‡ä»¶å¤´åˆ°å®ˆæŠ¤è¿›ç¨‹
  	 */
 	nw = writen(sockfd, &req, sizeof(struct printreq));
 	if (nw != sizeof(struct printreq)) {
@@ -137,10 +137,10 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
 	}
 
  	/**
- 	 * ·¢ËÍÎÄ¼þµ½ÊØ»¤½ø³Ì
+ 	 * å‘é€æ–‡ä»¶åˆ°å®ˆæŠ¤è¿›ç¨‹
  	 */
 	while( (nr = read(fd, buf, IOBUFSZ)) != 0) {
-		nw = writen(sockfd ,buf, nr);
+		nw = writen(sockfd, buf, nr);
 		if (nw != nr) {
 			if (nw < 0) {
 				err_sys("can't write to print server");
@@ -151,7 +151,7 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
 	}
 
 	/**
- 	 * »ñÈ¡ÏìÓ¦
+ 	 * èŽ·å–å“åº”
  	 */
  	if ((nr = readn(sockfd, &res, sizeof(struct printresp))) != sizeof(struct printresp)){
 		err_sys("cant't read response from server");

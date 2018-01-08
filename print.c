@@ -15,16 +15,16 @@ struct worker_thread {
 
 int log_to_stderr = 0;
 
-struct addrinfo *printer;//±£´æ´òÓ¡»úµÄÍøÂçµØÖ·
-char  *printer_name;//±£´æ´òÓ¡»úµÄÖ÷»úÃû×Ö
-phtread_mutex_t  configlock = PTHREAD_MUTEX_INITIALIZER;//ÓÃÓÚ±£»¤¶Ôreread±äÁ¿µÄ·ÃÎÊ
+struct addrinfo *printer;//ä¿å­˜æ‰“å°æœºçš„ç½‘ç»œåœ°å€
+char  *printer_name;//ä¿å­˜æ‰“å°æœºçš„ä¸»æœºåå­—
+phtread_mutex_t  configlock = PTHREAD_MUTEX_INITIALIZER;//ç”¨äºä¿æŠ¤å¯¹rereadå˜é‡çš„è®¿é—®
 int  reread;
 
 struct worker_thread *workers;
 pthread_mutex_t  workerlock = PTHREAD_MUTEX_INITIALIZER;
 sigset_t mask;
 struct job  *jobhead, *jobtail;
-int  jobfd;	//jobfdÊÇ×÷ÒµÎÄ¼şµÄÎÄ¼şÃèÊö·û
+int  jobfd;	//jobfdæ˜¯ä½œä¸šæ–‡ä»¶çš„æ–‡ä»¶æè¿°ç¬¦
 
 long nextjob;
 pthread_mutext_t  joblock = PTHREAD_MUTEX_INITIALIZER;

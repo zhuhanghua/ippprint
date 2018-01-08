@@ -47,7 +47,7 @@ void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
 
 	icp = ibuf;
 	hp = (struct ipp_hdr *)icp;
-	hp->major_version = 1;
+	hp->major_version = 1;/*1.1版本协议*/
 	hp->minor_version = 1;
 	hp->operation = htons(OP_PRINT_JOB);
 	hp->request_id = htonl(jp->jobid);
@@ -56,7 +56,7 @@ void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
 	icp = add_option(icp, TAG_CHARSET, "attributes-charset", "utf-8");
 	icp = add_option(icp, TAG_NATULANG, "attributes-natural-language", "en-us");
 	sprintf(str, "http://%s:%d", printer_name, IPP_PORT);
-	icp = add_option(icp, TAG_URI, "printer-uri", str);
+	icp = add_option(icp, TAG_URI, "printer-uri", str);/*打印机的统一资源标识符*/
 
 	*icp ++ = TAG_END_OF_ATTR;
 	iov[1].iov_base = ibuf;
@@ -69,8 +69,10 @@ void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct st
 
 	sprintf(hcp, "POST /%s/ipp HTTP/1.1 \r\n", printer_name);
 	hcp += strlen(hcp);
-	sprintf(hcp, "Content-Lenght: %ld\r\n", (long)sbuf.st_size + iov[1].ilen);
+	sprintf(hcp, "Content-Length: %ld\r\n", (long)sbuf.st_size + iov[1].iov_len);
 	hcp += strlen(hcp);
+	strcpy(hcp, "Content-Type: application/ipp\r\n");
+	hcp += strlen(hcp)
 	sprintf(hcp, "Host: %s:%d\r\n", printer_name, IPP_PORT);
 	hcp += strlen(hcp);
 	*hcp ++ = '\r';

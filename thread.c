@@ -1,9 +1,9 @@
 #include "print.h"
 #include "ipp.h"
 
-//µ±Á¬½ÓÇëÇó±»½ÓÊÜÊ±£¬mainÏß³ÌÖĞÅÉÉú³öclient_thread, 
-//Æä×÷ÓÃÊÇ´Ó¿Í»§printÃüÁîÖĞ½ÓÊÕÒª´òÓ¡µÄÎÄ¼ş¡£
-//ÎªÃ¿¸ö¿Í»§¶Ë´òÓ¡ÇëÇó·Ö±ğ½¨Á¢Ò»¸ö¶ÀÁ¢µÄÏß³Ì
+//å½“è¿æ¥è¯·æ±‚è¢«æ¥å—æ—¶ï¼Œmainçº¿ç¨‹ä¸­æ´¾ç”Ÿå‡ºclient_thread, 
+//å…¶ä½œç”¨æ˜¯ä»å®¢æˆ·printå‘½ä»¤ä¸­æ¥æ”¶è¦æ‰“å°çš„æ–‡ä»¶ã€‚
+//ä¸ºæ¯ä¸ªå®¢æˆ·ç«¯æ‰“å°è¯·æ±‚åˆ†åˆ«å»ºç«‹ä¸€ä¸ªç‹¬ç«‹çš„çº¿ç¨‹
 void * client_thread(void *arg) {
     int n, fd, sockfd, nr, nw, first;
     long jobid;
@@ -14,14 +14,14 @@ void * client_thread(void *arg) {
     char buf[IOBUFSZ];
 
     tid = pthread_self();
-    //°²×°Ïß³ÌÇåÀí´¦Àí³ÌĞò
+    //å®‰è£…çº¿ç¨‹æ¸…ç†å¤„ç†ç¨‹åº
     pthread_cleanup_push(client_cleanup, (void*)tid);
 
     sockfd = (int)arg;
     add_worker(tid, sockfd);
 
      /**
-      * ´Ó¿Í»§¶Ë¶ÁÈ¡ÇëÇóÍ·²¿
+      * ä»å®¢æˆ·ç«¯è¯»å–è¯·æ±‚å¤´éƒ¨
       */
     if ((n = treadn(sockfd, &req, sizeof(struct printreq), 10)) != sizeof(struct printreq)) {
         res.jobid = 0;
@@ -31,7 +31,7 @@ void * client_thread(void *arg) {
             res.retcode = htonl(EIO);
         }
 
-        strncpy(res.msg, strerror(res.retcode), MSGLEN_MAX);//¶ÁÈ¡Ê§°Ü£¬·µ»Ø´íÎóÂë
+        strncpy(res.msg, strerror(res.retcode), MSGLEN_MAX);//è¯»å–å¤±è´¥ï¼Œè¿”å›é”™è¯¯ç 
         writen(sockfd, &res, sizeof(struct printresp));
         pthread_exit((void *)1);
     }
@@ -46,7 +46,7 @@ void * client_thread(void *arg) {
     }
 
     /**
-     * ¶ÁÈ¡²¢´æ´¢Êı¾İÎÄ¼şµ½spoolÄ¿Â¼
+     * è¯»å–å¹¶å­˜å‚¨æ•°æ®æ–‡ä»¶åˆ°spoolç›®å½•
     */
     first = 1;
     while((nr = tread(sockfd, buf, IOBUFSZ, 20)) > 0) {
@@ -69,7 +69,7 @@ void * client_thread(void *arg) {
     close(fd);
 
     /**
-     * ´´½¨¿ØÖÆÎÄ¼ş£¬¼Ç×¡´òÓ¡ÇëÇó
+     * åˆ›å»ºæ§åˆ¶æ–‡ä»¶ï¼Œè®°ä½æ‰“å°è¯·æ±‚
      */
     sprintf(name, "%s/%s/%ld", SPOOLDIR, REQDIR, jobid);
     fd = creat(name, FILEPERM);
@@ -83,7 +83,7 @@ void * client_thread(void *arg) {
     close(fd);
 
     /**
-     * ·¢ËÍÏìÓ¦¸ø¿Í»§¶Ë
+     * å‘é€å“åº”ç»™å®¢æˆ·ç«¯
      */
     res.retcode = 0;
     res.jobid = htonl(jobid);
@@ -91,7 +91,7 @@ void * client_thread(void *arg) {
     write(sockfd, &res, sizeof(struct printresp));
 
     /**
-     * »½ĞÑ´òÓ¡Ïß³Ì£¬ÇåÀí£¬²¢ÍË³ö
+     * å”¤é†’æ‰“å°çº¿ç¨‹ï¼Œæ¸…ç†ï¼Œå¹¶é€€å‡º
      */
      log_msg("adding job %ld to queue", jobid);
      add_job(&req, jobid);
@@ -100,7 +100,7 @@ void * client_thread(void *arg) {
 }
 
 /**
- * ÓëÍøÂç´òÓ¡»úÍ¨ĞÅµÄÏß³ÌÔËĞĞ
+ * ä¸ç½‘ç»œæ‰“å°æœºé€šä¿¡çš„çº¿ç¨‹è¿è¡Œ
  */
 void printer_thread(void *arg) {
     struct job *jp;
@@ -162,15 +162,25 @@ void printer_thread(void *arg) {
 		}
 
 		log_msg("send file to printer for print");
+		
+		/**
+		 * Set up the IPP header
+		 */
 		setup_ipp_header(jp, iov, ibuf);
+		/**
+		 * Set up the HTTP header
+		 */
 		setup_http_header(jp, iov, hbuf, sbuf);
+
+		hlen = iov[0].iov_len;
+		ilen = iov[1].iov_len;
 
 		if ((nw = writev(sockfd, iov, 2)) != hlen + ilen) {
 			log_ret("can't write to printer");
 			goto defer;
 		}
 
-		//¶ÁÈ¡Êı¾İÎÄ¼ş²¢·¢ËÍ¸ø´òÓ¡»ú
+		//è¯»å–æ•°æ®æ–‡ä»¶å¹¶å‘é€ç»™æ‰“å°æœº
 		while((nr = read(fd, buf, IOBUFSZ)) > 0) {
 			if ((nw = write(sockfd, buf, nr)) != nr) {
 				if (nw < 0) {
@@ -188,7 +198,7 @@ void printer_thread(void *arg) {
 		}
 
 		/**
-		 * »ñÈ¡´òÓ¡»úÏìÓ¦£¬Èç¹û³É¹¦£¬ÔòÉ¾³ıÎÄ¼ş£¬ÊÍ·Åjp¶ÔÓ¦µÄ×ÊÔ´
+		 * è·å–æ‰“å°æœºå“åº”ï¼Œå¦‚æœæˆåŠŸï¼Œåˆ™åˆ é™¤æ–‡ä»¶ï¼Œé‡Šæ”¾jpå¯¹åº”çš„èµ„æº
 		 */
 		if (printer_status(sockfd, jp)){
 			unlink(name);
@@ -200,7 +210,7 @@ void printer_thread(void *arg) {
     }
 
  defer:
- 	closed(fd);
+ 	close(fd);
  	if (sockfd >= 0) {
 		close(sockfd);
  	}
@@ -220,7 +230,7 @@ void * signal_thread(void *arg) {
     	}
 
 		switch (signo){
-		case SIGHUP://ÖØĞÂË¢ĞÂÅäÖÃÎÄ¼ş
+		case SIGHUP://é‡æ–°åˆ·æ–°é…ç½®æ–‡ä»¶
 			phtread_mutex_lock(&configlock);
 			reread = 1;
 			phtread_mutex_unlock(&configlock);

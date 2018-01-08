@@ -5,10 +5,10 @@ void init_request(void) {
 	char name[FILENMSZ];
 
 	sprintf(name, "%s/%s", SPOOLDIR, JOBFILE);
-	//³õÊ¼»¯ÎÄ¼şÃèÊö·û
+	//åˆå§‹åŒ–æ–‡ä»¶æè¿°ç¬¦
 	jobfd = open(name, O_CREATE|O_RDWR, S_IRUSR|S_IWUSR);
 
-	//·ÅÒ»¸ö¼ÇÂ¼Ëø
+	//æ”¾ä¸€ä¸ªè®°å½•é”
 	if (write_lock(jobfd, 0, SEEK_SET, 0)< 0){
 		log_quit("daemon already running");
 	}
@@ -43,31 +43,31 @@ int initserver() {
     socklen_t sockaddrlen;
 	int err;
     int reuse = 1;
-	//´´½¨tcpÌ×½Ó×Ö
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);//tcp Ğ­Òé: ÃæÏòÁ¬½Ó
+	//åˆ›å»ºtcpå¥—æ¥å­—
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);//tcp åè®®: é¢å‘è¿æ¥
     if(sockfd < 0){
         perror("socket");
         return -1;
     }
 
-	//ÉèÖÃµØÖ·Îª¿ÉÖØ¸´Ê¹ÓÃ
+	//è®¾ç½®åœ°å€ä¸ºå¯é‡å¤ä½¿ç”¨
 	if (setsockopt(sockfd, SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(int)) == -1) {
 		err = errno;
 		goto errout;
 	}
     
 	serveraddr.sin_family = AF_INET;
-	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);//ÉèÖÃ±¾»úµØÖ·
-	serveraddr.sin_port = htons(8080);//½«ÕûĞÍ±äÁ¿´ÓÖ÷»ú×Ö½ÚË³Ğò×ª±ä³ÉÍøÂç×Ö½ÚË³Ğò,ÍøÂç×Ö½ÚË³Ğò²ÉÓÃbig-endianÅÅĞò·½Ê½
+	serveraddr.sin_addr.s_addr = htonl(INADDR_ANY);//è®¾ç½®æœ¬æœºåœ°å€
+	serveraddr.sin_port = htons(8080);//å°†æ•´å‹å˜é‡ä»ä¸»æœºå­—èŠ‚é¡ºåºè½¬å˜æˆç½‘ç»œå­—èŠ‚é¡ºåº,ç½‘ç»œå­—èŠ‚é¡ºåºé‡‡ç”¨big-endianæ’åºæ–¹å¼
 	memset(serveraddr.sin_zero, 0, sizeof(serveraddr.sin_zero)); 
 	
-	//°ó¶¨Ì×½Ó×ÖÓëµØÖ·ĞÅÏ¢
+	//ç»‘å®šå¥—æ¥å­—ä¸åœ°å€ä¿¡æ¯
 	if (bind(sockfd, (struct sockaddr_in*)&serveraddr, sizeof(serveraddr)) == -1) {
 		err = errno;
 		goto errout;
 	}
 
-	//¼àÌı£¬Ğû¸æ¿ÉÒÔ½ÓÊÜÁ¬½ÓÇëÇó
+	//ç›‘å¬ï¼Œå®£å‘Šå¯ä»¥æ¥å—è¿æ¥è¯·æ±‚
 	if (listen(serveraddr, 128) == -1) {
 		err = errno;
 		goto errout;
@@ -81,8 +81,8 @@ errout:
 }
 
 /**
- * µ±ÊØ»¤½ø³Ì³ÌĞòÆô¶¯Ê±£¬µ÷ÓÃbuild_qonstart´Ó´æ´¢ÔÚ/var/spool/printer/reqsÖĞµÄ´ÅÅÌÎÄ¼ş½¨Á¢
- * Ò»¸öÄÚ´æÖĞµÄ´òÓ¡×÷ÒµÁĞ±í¡£Èç¹û²»ÄÜ´ò¿ª¸ÃÄ¿Â¼£¬±íÊ¾Ã»ÓĞ´òÓ¡×÷ÒµÒª´¦Àí
+ * å½“å®ˆæŠ¤è¿›ç¨‹ç¨‹åºå¯åŠ¨æ—¶ï¼Œè°ƒç”¨build_qonstartä»å­˜å‚¨åœ¨/var/spool/printer/reqsä¸­çš„ç£ç›˜æ–‡ä»¶å»ºç«‹
+ * ä¸€ä¸ªå†…å­˜ä¸­çš„æ‰“å°ä½œä¸šåˆ—è¡¨ã€‚å¦‚æœä¸èƒ½æ‰“å¼€è¯¥ç›®å½•ï¼Œè¡¨ç¤ºæ²¡æœ‰æ‰“å°ä½œä¸šè¦å¤„ç†
  */
 void build_qonstart(void) {
 	int fd, err, nr;
@@ -106,7 +106,7 @@ void build_qonstart(void) {
 			continue;
 		}
 
-		//¶ÁÈ¡±£´æÔÚÎÄ¼şÖĞµÄprintreq½á¹¹
+		//è¯»å–ä¿å­˜åœ¨æ–‡ä»¶ä¸­çš„printreqç»“æ„
 		nr = read(fd, &req, sizeof(struct printreq));
 		if (nr != sizeof(struct printreq)) {
 			if (nr < 0) {
@@ -122,10 +122,10 @@ void build_qonstart(void) {
 			unlink(fname);
 			continue;
 		}
-		//½«ÎÄ¼şÃû×ª»¯Îª×÷ÒµID
+		//å°†æ–‡ä»¶åè½¬åŒ–ä¸ºä½œä¸šID
 		jobid = atol(entp->d_name);
 		log_msg("adding job %ld to queue", jobid);
-		//½«ÇëÇó¼ÓÈëµ½¹ÒÆğµÄ´òÓ¡×÷ÒµÁĞ±í 
+		//å°†è¯·æ±‚åŠ å…¥åˆ°æŒ‚èµ·çš„æ‰“å°ä½œä¸šåˆ—è¡¨ 
 		add_job(&req, jobid);
 	}		
 }
@@ -139,8 +139,8 @@ int main(int argc, char *argv[]) {
 	struct sigaction sa;
 	struct passwd *pwdp;
 
-	//³õÊ¼»¯ÊØ»¤½ø³Ì³ÌĞò
-	if (argc £¡= 1) {
+	//åˆå§‹åŒ–å®ˆæŠ¤è¿›ç¨‹ç¨‹åº
+	if (argc ï¼= 1) {
 		err_quit("usage: printd");
 	}
 
@@ -177,7 +177,7 @@ int main(int argc, char *argv[]) {
 		log_sys("gethostname error");
 	}
 
-	//»ñÈ¡ÍøÂç´òÓ¡»úµØÖ·ÁĞ±í
+	//è·å–ç½‘ç»œæ‰“å°æœºåœ°å€åˆ—è¡¨
 	if ((err = getaddrlist(host, "print", &ailist)) != 0) {
 		log_quit("getaddrinfo error: %s", gai_strerror(err));
 		exit(1);
@@ -187,9 +187,9 @@ int main(int argc, char *argv[]) {
 
 	maxfd = -1;
 	for (aip = ailist; aip != NULL; aip = aip->ai_next){
-		//½¨Á¢·şÎñ¶Ësocket
+		//å»ºç«‹æœåŠ¡ç«¯socket
 		if ((sockfd = initserver(SOCK_STREAM, aip->ai_addr, aip->ai_addrlen, QLEN)) >= 0) {
-			FD_SET(sockfd, &rendezvous);//½«ÆäÎÄ¼şÃèÊö·û¼ÓÈëfd_set
+			FD_SET(sockfd, &rendezvous);//å°†å…¶æ–‡ä»¶æè¿°ç¬¦åŠ å…¥fd_set
 			if (sockfd > maxfd) {
 				maxfd = sockfd;
 			}
@@ -212,38 +212,42 @@ int main(int argc, char *argv[]) {
 		log_sys("can't change IDs to user lp");
 	}
 
-	//´´½¨Ò»¸ö´¦Àí´òÓ¡»úÍ¨ĞÅµÄÏß³Ì
-	pthread_create(&tid, NULL, printer_thread, NULL);
-	//´´½¨Ò»¸ö´¦ÀíĞÅºÅµÄÏß³Ì
+	//åˆ›å»ºä¸€ä¸ªå¤„ç†æ‰“å°æœºé€šä¿¡çš„çº¿ç¨‹
+	int iRet = pthread_create(&tid, NULL, printer_thread, NULL);/*å‚æ•°ä¾æ¬¡æ˜¯: åˆ›å»ºçš„çº¿ç¨‹idï¼Œ çº¿ç¨‹å‚æ•°ï¼Œè°ƒç”¨å‡½æ•°åï¼Œä¼ å…¥çš„å‡½æ•°å‚æ•°*/
+	if(iRet) {
+		printf("phread_create error: iRet=%d\n", iRet);
+		exit(1);
+	}
+	//åˆ›å»ºä¸€ä¸ªå¤„ç†ä¿¡å·çš„çº¿ç¨‹
 	pthread_create(&tid, NULL, signal_thread, NULL);
 	build_qonstart();
 
 	log_msg("daemon initialized");
 
-	//´¦ÀíÀ´×Ô¿Í»§¶ËµÄÁ¬½ÓÇëÇó
-	//ÊµÏÖ·şÎñÆ÷ÏìÓ¦¶à¸ö¿Í»§¶ËµÄÁ¬½Ó£¬¾Í¿ÉÒÔÊ¹ÓÃselectº¯Êı£¬ÇÒÊÇ·Ç×èÈûµÄ£¬¿ÉÒÔ²éÑ¯ÊÇÄÄ¸ö¿Í»§¶ËµÄÏìÓ¦¡£
+	//ä¸»çº¿ç¨‹å¤„ç†æ¥è‡ªå®¢æˆ·ç«¯çš„è¿æ¥è¯·æ±‚
+	//å®ç°æœåŠ¡å™¨å“åº”å¤šä¸ªå®¢æˆ·ç«¯çš„è¿æ¥ï¼Œå°±å¯ä»¥ä½¿ç”¨selectå‡½æ•°ï¼Œä¸”æ˜¯éé˜»å¡çš„ï¼Œå¯ä»¥æŸ¥è¯¢æ˜¯å“ªä¸ªå®¢æˆ·ç«¯çš„å“åº”ã€‚
 	for (;;) {
 		rset = rendezvous;
-		//ÎŞ×èÈûÁ¬½Ó£¬µÈ´ıÆäÖĞÒ»¸öÎÄ¼şÃèÊö·û±äÎª¿É¶Á
+		//æ— é˜»å¡è¿æ¥ï¼Œç­‰å¾…å…¶ä¸­ä¸€ä¸ªæ–‡ä»¶æè¿°ç¬¦å˜ä¸ºå¯è¯»
 		if (select(maxfd+1, &rset, NULL, NULL, NULL) < 0) {
 			log_sys("select failed");
 		}
 
 		for (i = 0; i < maxfd; i ++) {
-			//Ò»¸ö¿É¶ÁµÄÎÄ¼şÃèÊö·û¾ÍÒâÎ¶×ÅÒ»¸öÁ¬½ÓÇëÇóĞèÒª´¦Àí
+			//ä¸€ä¸ªå¯è¯»çš„æ–‡ä»¶æè¿°ç¬¦å°±æ„å‘³ç€ä¸€ä¸ªè¿æ¥è¯·æ±‚éœ€è¦å¤„ç†
 			if (FD_ISSET(i, &rset)) {
-				//Ê¹ÓÃaccept½ÓÊÜ¸ÃÁ¬½ÓÇëÇó
+				//ä½¿ç”¨acceptæ¥å—è¯¥è¿æ¥è¯·æ±‚
 				sockfd = accept(i, NULL, NULL);
 				if (sockfd < 0) {
-					log_ret("accept failed");//Èç¹ûÊ§°Ü£¬Ôò¼ÇÂ¼ÈÕÖ¾¼ÌĞø¼ì²é¸ü¶àµÄ¿É¶ÁÎÄ¼şÃèÊö·û
+					log_ret("accept failed");//å¦‚æœå¤±è´¥ï¼Œåˆ™è®°å½•æ—¥å¿—ç»§ç»­æ£€æŸ¥æ›´å¤šçš„å¯è¯»æ–‡ä»¶æè¿°ç¬¦
 				}
 
-				pthread_create(&tid, NULL, client_thread, (void*)sockfd);//´´½¨Ò»¸öÏß³ÌÀ´´¦Àí¿Í»§¶ËµÄÇëÇó
+				pthread_create(&tid, NULL, client_thread, (void*)sockfd);//åˆ›å»ºä¸€ä¸ªçº¿ç¨‹æ¥å¤„ç†å®¢æˆ·ç«¯çš„è¯·æ±‚
 			}
 		}
 	}
 	
-	//Ö÷Ïß³ÌmainÒ»Ö±Ñ­»·£¬½«ÇëÇó·¢ËÍµ½ÆäËûÏß³Ì´¦Àí£¬ÓÀÔ¶µ½´ï²»ÁËexitÓï¾ä
+	//ä¸»çº¿ç¨‹mainä¸€ç›´å¾ªç¯ï¼Œå°†è¯·æ±‚å‘é€åˆ°å…¶ä»–çº¿ç¨‹å¤„ç†ï¼Œæ°¸è¿œåˆ°è¾¾ä¸äº†exitè¯­å¥
 	exit(1);
 }
 
