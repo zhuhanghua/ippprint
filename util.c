@@ -136,7 +136,7 @@ treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
 		}
 
         nleft -= nread;
-        (char*)buf += nread;
+        (char *)buf += nread;
     }
 
     return (nbytes - nleft);

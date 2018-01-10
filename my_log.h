@@ -1,3 +1,5 @@
+#ifndef __my_log_h
+#define __my_log_h
 #include <errno.h>  
 #include <stdarg.h>  
 #include <syslog.h>  
@@ -68,3 +70,5 @@ static void log_doit(int errnoflag, int priority, const char *fmt, va_list ap)
 		syslog(priority, buf);
 	return;
 }
+
+#endif

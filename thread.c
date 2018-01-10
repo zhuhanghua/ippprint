@@ -235,7 +235,7 @@ void * signal_thread(void *arg) {
 		case SIGHUP://重新刷新配置文件
 			phtread_mutex_lock(&configlock);
 			reread = 1;
-			phtread_mutex_unlock(&configlock);
+			pthread_mutex_unlock(&configlock);
 			break;
 		case SIGTERM:
 			kill_workers();

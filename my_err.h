@@ -1,5 +1,8 @@
+#ifndef __my_err_h
+#define __my_err_h
 #include <errno.h> /* for definition of errno */
 #include <stdarg.h> /* ISO C variable aruments */
+#include "ourhdr.h"
 
 static void err_doit(int, int, const char *, va_list);
 
@@ -116,3 +119,5 @@ err_doit(int errnoflag, int error, const char *fmt, va_list ap)
 	fputs(buf, stderr);
 	fflush(NULL); /* flushes all stdio output streams */
 }
+
+#endif

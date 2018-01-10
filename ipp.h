@@ -4,6 +4,8 @@
 #ifndef _IPP_H_
 #define _IPP_H_
 
+#include <stdint.h>
+
 #define STATCLASS_OK(x) ((x)>=0x0000 && (x)<=0x00ff)
 #define STATCLASS_INFO(x) ((x) >= 0x0100 && (x) <= 0x01ff)
 #define STATCLASS_REDIR(x) ((x) >= 0x0200 && (x) <= 0x02ff)
@@ -49,7 +51,7 @@
 #define TAG_MIMETYPE         0x49	/* mimeMediaType */
 
 
-struct ipp_hdr {
+struct ipp_hdr{
 	int8_t major_version;/*版本号*/
 	int8_t minor_version;
 	union {

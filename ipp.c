@@ -6,6 +6,8 @@
 
 #include <sys/select.h>
 #include <sys/uio.h>
+#include <arpa/inet.h>
+
 
 #define HTTP_INFO(x)  ((x)>=100 && (x) <= 199)
 #define HTTP_SUCCESS(x)  ((x)>=200 && (x) <= 299)
@@ -104,7 +106,7 @@ int printer_status(int sockfd, struct job * jp){
 	int i, success, code, len, found, bufsz;
 	long jobid;
 	ssize_t nr;//读取打印机数据缓冲区后返回的大小
-	char *statcode, *reason, *cp, *contentlen;
+	char *statcode, *reason, *contentlen;
 	struct ipp_hdr *hp;
 	char *bp;//目标缓冲区首地址
 	char *cp;//目标缓冲区定位指针

@@ -14,10 +14,7 @@
 #include <sys/wait.h>
 #include <arpa/inet.h>
 #include <dirent.h>
+#include <stdint.h>
+#include <stddef.h>
 #include "my_err.h"
 #include "my_log.h"
-
-
-#define log_sys print
-#define log_info print
-#define log_error print
