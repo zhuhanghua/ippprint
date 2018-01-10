@@ -34,7 +34,7 @@ void add_job(struct printreq *reqp, long jobid) {
 	memcpy(&jp->req, reqp, sizeof(struct printreq));
 	jp->jobid = jobid;
 	jp->next = NULL;
-	phtread_mutex_lock(&joblock);
+	pthread_mutex_lock(&joblock);
 	jp->prev = jobtail;
 	if (jobtail == NULL) {
 		jobhead = jp;
