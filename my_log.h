@@ -7,16 +7,14 @@
 
 static void log_doit(int, int, const char*, va_list ap);
 
-extern int debug;
+int debug;
 
-void log_open(const char *ident, int option, int facility)
-{
+void log_open(const char *ident, int option, int facility){
 	if (debug == 0)
 		openlog(ident, option, facility);
 }
 
-void log_ret(const char *fmt, ...)
-{
+void log_ret(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	log_doit(1, LOG_ERR, fmt, ap);
@@ -24,8 +22,7 @@ void log_ret(const char *fmt, ...)
 	return;
 }
 
-void log_sys(const char *fmt, ...)
-{
+void log_sys(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	log_doit(1, LOG_ERR, fmt, ap);
@@ -33,8 +30,7 @@ void log_sys(const char *fmt, ...)
 	exit(2);
 }
 
-void log_msg(const char *fmt, ...)
-{
+void log_msg(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	log_doit(0, LOG_ERR, fmt, ap);
@@ -42,8 +38,7 @@ void log_msg(const char *fmt, ...)
 	return;
 }
 
-void log_quit(const char *fmt, ...)
-{
+void log_quit(const char *fmt, ...){
 	va_list ap;
 	va_start(ap, fmt);
 	log_doit(0, LOG_ERR, fmt, ap);
@@ -51,8 +46,7 @@ void log_quit(const char *fmt, ...)
 	exit(2);
 }
 
-static void log_doit(int errnoflag, int priority, const char *fmt, va_list ap)
-{
+static void log_doit(int errnoflag, int priority, const char *fmt, va_list ap){
 	int errno_save;
 	char buf[MAXLINE];
 
@@ -65,6 +59,7 @@ static void log_doit(int errnoflag, int priority, const char *fmt, va_list ap)
 		fflush(stdout);
 		fputs(buf, stderr);
 		fflush(stderr);
+		
 	}
 	else
 		syslog(priority, buf);

@@ -1,13 +1,32 @@
 #include "print.h"
-#include "print.c"
 #include "apue.h"
+//#include "my_err.h"
+//#include "my_log.h"
+
+extern int log_to_stderr;
+
+extern struct addrinfo *printer;//保存打印机的网络地址
+extern char  *printer_name;//保存打印机的主机名字
+extern pthread_mutex_t  configlock;//用于保护对reread变量的访问
+extern int  reread;
+
+extern struct worker_thread *workers;
+extern pthread_mutex_t  workerlock;
+extern sigset_t mask;
+extern struct job  *jobhead, *jobtail;
+extern int  jobfd;	//jobfd是作业文件的文件描述符
+
+extern long nextjob;
+extern pthread_mutex_t  joblock;
+extern pthread_cond_t  jobwait;
+
 /**
  * 将一个worker_thread结构加入到活动线程列表中。
  */
 void add_worker(pthread_t tid, int sockfd) {
 	//分配该结构需要内存, 并初始化
 	struct worker_thread *wtp;
-	if ((wtp = malloc(sizeof(struct worker_thread))) == NULL) {
+	if ((wtp = (struct worker_thread *)malloc(sizeof(struct worker_thread))) == NULL) {
 		pthread_exit((void *)1);
 	}
 	wtp->tid = tid;

@@ -1,11 +1,30 @@
 #include "print.h"
 #include "ipp.h"
-#include "print.c"
 #include "apue.h"
-
+//#include "my_err.h"
+//#include "my_log.h"
+#include "ourhdr.h"
 //当连接请求被接受时，main线程中派生出client_thread, 
 //其作用是从客户print命令中接收要打印的文件。
 //为每个客户端打印请求分别建立一个独立的线程
+extern int log_to_stderr;
+
+extern struct addrinfo *printer;//保存打印机的网络地址
+extern char  *printer_name;//保存打印机的主机名字
+extern pthread_mutex_t  configlock;//用于保护对reread变量的访问
+extern int  reread;
+
+extern struct worker_thread *workers;
+extern pthread_mutex_t  workerlock;
+extern sigset_t mask;
+extern struct job  *jobhead, *jobtail;
+extern int  jobfd;	//jobfd是作业文件的文件描述符
+
+extern long nextjob;
+extern pthread_mutex_t  joblock;
+extern pthread_cond_t  jobwait;
+
+
 void * client_thread(void *arg) {
     int n, fd, sockfd, nr, nw, first;
     long jobid;
@@ -19,7 +38,7 @@ void * client_thread(void *arg) {
     //安装线程清理处理程序
     pthread_cleanup_push(client_cleanup, (void*)tid);
 
-    sockfd = (int)arg;
+    sockfd = *(int*)arg;
     add_worker(tid, sockfd);
 
      /**
@@ -89,7 +108,7 @@ void * client_thread(void *arg) {
      */
     res.retcode = 0;
     res.jobid = htonl(jobid);
-    sprintf(res.msg, &res, sizeof(struct printreq));
+    sprintf(res.msg, strerror(res.retcode), sizeof(struct printresp));
     write(sockfd, &res, sizeof(struct printresp));
 
     /**
@@ -104,7 +123,7 @@ void * client_thread(void *arg) {
 /**
  * 与网络打印机通信的线程运行
  */
-void printer_thread(void *arg) {
+void* printer_thread(void *arg) {
     struct job *jp;
     int hlen, ilen, sockfd, fd, nr, nw;
     struct stat sbuf;
@@ -135,7 +154,7 @@ void printer_thread(void *arg) {
 			printer = NULL;
 			printer_name = NULL;
 			reread = 0;
-			printer_mutex_unlock(&configlock);
+			pthread_mutex_lock(&configlock);
 			init_printer();
         }else{
         	pthread_mutex_unlock(&configlock);
@@ -172,12 +191,12 @@ void printer_thread(void *arg) {
 		/**
 		 * Set up the HTTP header
 		 */
-		setup_http_header(jp, iov, hbuf, sbuf);
+		setup_http_header(jp, iov, hbuf, &sbuf);
 
 		hlen = iov[0].iov_len;
 		ilen = iov[1].iov_len;
 
-		if ((nw = writev(sockfd, iov, 2)) != hlen + ilen) {
+		if ((nw = writev(sockfd, (const iovec*)iov, 2)) != hlen + ilen) {
 			log_ret("can't write to printer");
 			goto defer;
 		}
@@ -233,7 +252,7 @@ void * signal_thread(void *arg) {
 
 		switch (signo){
 		case SIGHUP://重新刷新配置文件
-			phtread_mutex_lock(&configlock);
+			pthread_mutex_lock(&configlock);
 			reread = 1;
 			pthread_mutex_unlock(&configlock);
 			break;

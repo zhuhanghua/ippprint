@@ -1,10 +1,13 @@
 #include "apue.h"
 #include "print.h"
+#include "ipp.h"
+#include "my_err.h"
+#include "my_log.h"
 
 extern int optind, opterr, optopt;
 extern char *optarg;
 
-int log_to_stderr = 1;
+// int log_to_stderr = 1;
 
 void submit_file(int, int, const char*, size_t, int);
 
@@ -83,7 +86,7 @@ int main(int argc, char *argv[]) {
 	for (aip = ailist; aip != NULL; aip = ailist->ai_next) {
 		if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 			err = errno;
-		}else if(connect_retry(sockfd, aip, aip->ai_addrlen) < 0) {
+		}else if(connect_retry(sockfd, (const struct sockaddr*)aip, aip->ai_addrlen) < 0) {
 			err = errno;
 		}else{
 			submit_file(fd, sockfd, argv[1], sbuf.st_size, text);
@@ -160,7 +163,7 @@ void submit_file(int fd, int sockfd, const char *fname, size_t nbytes, int text)
  	if (res.retcode != 0) {
 		printf("rejected: %s\n", res.msg);
  	}else {
-		printf("job Id %d", ntonl(res.jobid));
+		printf("job Id %d", htonl(res.jobid));
  	}
 
  	exit(0);

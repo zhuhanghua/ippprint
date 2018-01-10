@@ -1,6 +1,27 @@
 #include "print.h"
-#include "print.c"
+//#include "print.c"
 #include "apue.h"
+#include "ourhdr.h"
+//#include "my_err.h"
+//#include "my_log.h"
+
+extern int log_to_stderr;
+extern int debug;
+extern struct addrinfo *printer;//±£´æ´òÓ¡»úµÄÍøÂçµØÖ·
+extern char  *printer_name;//±£´æ´òÓ¡»úµÄÖ÷»úÃû×Ö
+extern pthread_mutex_t  configlock;//ÓÃÓÚ±£»¤¶Ôreread±äÁ¿µÄ·ÃÎÊ
+extern int  reread;
+
+extern struct worker_thread *workers;
+extern pthread_mutex_t  workerlock;
+extern sigset_t mask;
+extern struct job  *jobhead, *jobtail;
+extern int  jobfd;	//jobfdÊÇ×÷ÒµÎÄ¼þµÄÎÄ¼þÃèÊö·û
+
+extern long nextjob;
+extern pthread_mutex_t  joblock;
+extern pthread_cond_t  jobwait;
+
 
 void update_jobno(void) {
 	char buf[32];
@@ -28,7 +49,7 @@ long get_newjobno(void) {
 
 void add_job(struct printreq *reqp, long jobid) {
 	struct job *jp;
-	if ((jp = malloc(sizeof(struct job))) == NULL) {
+	if ((jp = (struct job*)malloc(sizeof(struct job))) == NULL) {
 		log_sys("malloc failed");
 	}
 	memcpy(&jp->req, reqp, sizeof(struct printreq));
@@ -44,7 +65,7 @@ void add_job(struct printreq *reqp, long jobid) {
 
 	jobtail = jp;
 	pthread_mutex_unlock(&joblock);
-	pthread_cond_signal(&jobwait);//ä¿¡å·é”ï¼Œé€šçŸ¥ç­‰å¾…æ‰“å°çš„çº¿ç¨‹
+	pthread_cond_signal(&jobwait);//ä¿¡å·é”ï¼Œé€šçŸ¥ç­‰å¾…æ‰“å°çš„çº¿ï¿?
 }
 
 /**
@@ -67,7 +88,7 @@ void replace_job(struct job* jp) {
 
 /**
  * å°†ä½œä¸šä»ŽæŒ‚èµ·çš„ä½œä¸šåˆ—è¡¨ä¸­åˆ é™¤
- * è°ƒç”¨è€…å¿…é¡»æŒæœ‰joblockäº’æ–¥é‡
+ * è°ƒç”¨è€…å¿…é¡»æŒæœ‰joblockäº’æ–¥ï¿?
  */
 void remove_job(struct job *target) {
 	if (target->next != NULL) {

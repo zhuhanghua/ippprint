@@ -11,8 +11,7 @@ static void err_doit(int, int, const char *, va_list);
 * Print a message and return.
 */
 void
-err_ret(const char *fmt, ...)
-{
+err_ret(const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -26,8 +25,7 @@ err_ret(const char *fmt, ...)
 * Print a message and terminate.
 */
 void
-err_sys(const char *fmt, ...)
-{
+err_sys(const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -43,8 +41,7 @@ err_sys(const char *fmt, ...)
 * Print a message and terminate.
 */
 void
-err_exit(int error, const char *fmt, ...)
-{
+err_exit(int error, const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -59,8 +56,7 @@ err_exit(int error, const char *fmt, ...)
 * Print a message, dump core, and terminate.
 */
 void
-err_dump(const char *fmt, ...)
-{
+err_dump(const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -76,8 +72,7 @@ err_dump(const char *fmt, ...)
 * Print a message and return.
 */
 void
-err_msg(const char *fmt, ...)
-{
+err_msg(const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -91,8 +86,7 @@ err_msg(const char *fmt, ...)
 * Print a message and terminate.
 */
 void
-err_quit(const char *fmt, ...)
-{
+err_quit(const char *fmt, ...){
 	va_list ap;
 
 	va_start(ap, fmt);
@@ -107,8 +101,7 @@ err_quit(const char *fmt, ...)
 * Caller specifies "errnoflag".
 */
 static void
-err_doit(int errnoflag, int error, const char *fmt, va_list ap)
-{
+err_doit(int errnoflag, int error, const char *fmt, va_list ap){
 	char buf[MAXLINE];
 	vsnprintf(buf, MAXLINE, fmt, ap);
 	if (errnoflag)

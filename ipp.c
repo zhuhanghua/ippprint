@@ -1,13 +1,17 @@
 //#include "apue.h"
 #include "print.h"
-#include "print.c"
+//#include "print.c"
 #include "ipp.h"
 #include "apue.h"
-
+//#include "my_err.h"
+//#include "my_log.h"
+#include "ourhdr.h"
 #include <sys/select.h>
 #include <sys/uio.h>
 #include <arpa/inet.h>
 
+extern 
+char  *printer_name;//保存打印机的主机名字
 
 #define HTTP_INFO(x)  ((x)>=100 && (x) <= 199)
 #define HTTP_SUCCESS(x)  ((x)>=200 && (x) <= 299)
@@ -37,7 +41,7 @@ char* add_option(char* cp, int tag, char* optname, char *optval) {
 	return (cp + n);
 }
 
-void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
+void setup_ipp_header(struct job *jp, struct ipvec iov[], char* ibuf){
     char *icp;
     struct ipp_hdr *hp;
    
@@ -47,27 +51,27 @@ void setup_ipp_header(struct job *jp, struct ipvec** iov, char* ibuf){
 	hp = (struct ipp_hdr *)icp;
 	hp->major_version = 1;/*1.1版本协议*/
 	hp->minor_version = 1;
-	hp->operation = htons(OP_PRINT_JOB);
+	hp->u.op = htons(OP_PRINT_JOB);
 	hp->request_id = htonl(jp->jobid);
 	icp += offsetof(struct ipp_hdr, attr_group);
 	*icp++ = TAG_OPERATION_ATTR;
-	icp = add_option(icp, TAG_CHARSET, "attributes-charset", "utf-8");
-	icp = add_option(icp, TAG_NATULANG, "attributes-natural-language", "en-us");
+	icp = add_option(icp, TAG_CHARSET, (char *)"attributes-charset", (char *)"utf-8");
+	icp = add_option(icp, TAG_NATULANG, (char *)"attributes-natural-language", (char *)"en-us");
 	sprintf(str, "http://%s:%d", printer_name, IPP_PORT);
-	icp = add_option(icp, TAG_URI, "printer-uri", str);/*打印机的统一资源标识符*/
+	icp = add_option(icp, TAG_URI, (char *)"printer-uri", str);/*打印机的统一资源标识符*/
 
 	*icp ++ = TAG_END_OF_ATTR;
-	iov[1]->iov_base = ibuf;
-	iov[1]->iov_len = icp - ibuf;
+	iov[1].iov_base = ibuf;
+	iov[1].iov_len = icp - ibuf;
 }
 
-void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct stat* sbuf) {
+void setup_http_header(struct job *jp, struct ipvec iov[], char* hbuf, struct stat* sbuf) {
 	char *hcp;
 	hcp = hbuf;
 
 	sprintf(hcp, "POST /%s/ipp HTTP/1.1 \r\n", printer_name);
 	hcp += strlen(hcp);
-	sprintf(hcp, "Content-Length: %ld\r\n", (long)sbuf->st_size + iov[1]->iov_len);
+	sprintf(hcp, "Content-Length: %ld\r\n", (long)sbuf->st_size + iov[1].iov_len);
 	hcp += strlen(hcp);
 	strcpy(hcp, "Content-Type: application/ipp\r\n");
 	hcp += strlen(hcp);
@@ -75,18 +79,18 @@ void setup_http_header(struct job *jp, struct ipvec** iov, char* hbuf, struct st
 	hcp += strlen(hcp);
 	*hcp ++ = '\r';
 	*hcp ++ = '\n';
-	iov[0]->iov_base = hbuf;
-	iov[0]->iov_len = hcp - hbuf;
+	iov[0].iov_base = hbuf;
+	iov[0].iov_len = hcp - hbuf;
 }
 
-ssize_t readmore(int sockfd, char * *bpp, int off, int *bszp){
+ssize_t readmore(int sockfd, char **bpp, int off, int *bszp){
 	ssize_t nr;
 	char *bp = *bpp;
 	int bsz = *bszp;
 
 	if (off >= bsz) {
-		bsz += IOBUFSZ;
-		if ((bp = realloc(*bpp, bsz)) == NULL) {
+		bsz = bsz + IOBUFSZ;
+		if ((bp = (char*)realloc(*bpp, bsz)) == NULL) {
 			log_sys("readmore: can't allocate bigger read buffer");
 		}
 
@@ -113,7 +117,7 @@ int printer_status(int sockfd, struct job * jp){
 
 	success = 0;
 	bufsz = IOBUFSZ;
-	if ((bp = malloc(IOBUFSZ)) == NULL) {
+	if ((bp = (char *)malloc(IOBUFSZ)) == NULL) {
 		log_sys("printer_status: can't allocate read buffer");
 	}
 
@@ -173,7 +177,7 @@ int printer_status(int sockfd, struct job * jp){
 				}
 
 				cp = &bp[i];
-				if (strncasecmp(cp, "Content-Length:", 15) == 0) {
+				if (strncasecmp(cp, (char *)"Content-Length:", 15) == 0) {
 					cp += 15;
 					while(isspace((int)*cp)) {
 						cp ++;
@@ -223,8 +227,8 @@ int printer_status(int sockfd, struct job * jp){
 			}
 
 			hp = (struct ipp_hdr*)cp;
-			i = ntohs(hp->status);
-			jobid = ntonl(hp->request_id);
+			i = ntohs(hp->u.st);
+			jobid = htonl(hp->request_id);
 			if (jobid != jp->jobid) {
 				log_msg("jobid %ld status code %d", jobid, i);
 				break;

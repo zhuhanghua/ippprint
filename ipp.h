@@ -68,8 +68,9 @@ struct ipvec{
 	int iov_len;
 };
 
-#define operation u.op
-#define status u.st
+void setup_ipp_header(struct job *jp, struct ipvec iov[], char* ibuf);
+void setup_http_header(struct job *jp, struct ipvec iov[], char* hbuf, struct stat* sbuf);
+
 
 
 #endif

@@ -17,7 +17,7 @@ typedef void Sigfunc(int);
 #endif
 #define min(a,b)         ((a) < (b) ? (a) : (b))
 #define max(a,b)         ((a) > (b) ? (a) : (b))
-
+/*
 char *path_alloc(int *);
 int open_max(void);
 void clr_fl(int, int);
@@ -33,8 +33,7 @@ void tty_atexit(void);
 struct termios *tty_termios(void);
 #endif
 void sleep_us(unsigned int);
-ssize_t readn(int, void *, size_t);
-ssize_t writen(int, const void *, size_t);
+
 int daemon_init(void);
 int s_pipe(int *);
 int recv_fd(int, ssize_t(*func) (int, const void *, size_t));
@@ -69,6 +68,7 @@ pid_t lock_test(int, int, off_t, int, off_t);
 	lock_test(fd, F_RDLCK, offset, whence, len)
 #define is_writelock(fd, offset, whence, len) \
 	lock_test(fd, F_WRLCK, offset, whence, len)
+	*/
 void err_dump(const char *, ...);
 void err_msg(const char *, ...);
 void err_quit(const char *, ...);
@@ -79,9 +79,10 @@ void log_open(const char *, int, int);
 void log_quit(const char *, ...);
 void log_ret(const char *, ...);
 void log_sys(const char *, ...);
+/*
 void TELL_WAIT(void);
 void TELL_PARENT(pid_t);
 void TELL_CHILD(pid_t);
 void WAIT_PARENT(void);
-void WAIT_CHILD(void);
+void WAIT_CHILD(void);*/
 #endif

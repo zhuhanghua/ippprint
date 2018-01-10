@@ -1,7 +1,11 @@
 #include "apue.h"
 #include "print.h"
+#include "ipp.h"
+//#include "my_err.h"
+//#include "my_log.h"
+#include "ourhdr.h"
 #include <sys/select.h>
-
+#include <unistd.h>
 #define MAXCFGLINE 512
 #define MAXKWLEN 16
 #define MAXFMTLEN 16
@@ -63,7 +67,7 @@ scan_configfile(char* keyword) {
  * 找到运行打印假脱机守护进程的计算机系统的名字
 */
 char* get_printserver(void) {
-    return (scan_configfile("printserver"));
+    return (scan_configfile((char *)"printserver"));
 }
 
 /**
@@ -72,16 +76,16 @@ char* get_printserver(void) {
 struct addrinfo* get_printaddr(void) {
     int err;
     char *p;
-    struct addrinfo *ailist;
+    struct addrinfo **ailist;
 
-    if ((p = scan_configfile("printer")) != NULL) {
-        if ((err = getaddrlist(p, "ipp", ailist)) != 0) {
+    if ((p = scan_configfile((char *)"printer")) != NULL) {
+        if ((err = getaddrlist(p, (char *)"ipp", ailist)) != 0) {
 
             log_msg("no address information for %s", p);
             return (NULL);
         }
 
-        return (ailist);
+        return (*ailist);
     }
 
     log_msg("no printer address specified");
@@ -136,9 +140,61 @@ treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
 		}
 
         nleft -= nread;
-        (char *)buf += nread;
+        buf = (char*)buf + nread;
     }
 
     return (nbytes - nleft);
 }
+
+ssize_t writen(int fd, const void *buf, size_t num){  
+	ssize_t res;  
+	size_t n;  
+	const char *ptr;  
+  
+	n = num;  
+	ptr = (const char *)buf;  
+	while (n > 0) {  
+		/* 开始写*/   
+		if ((res = write(fd, ptr, n)) <= 0) {  
+			if (errno == EINTR)  
+			res = 0;  
+			else  
+			return (-1);  
+		}  
+
+
+		ptr += res;/* 从剩下的地方继续写     */   
+		n -= res;  
+	}  
+  
+	return (num);  
+}  
+
+ssize_t readn(int fd, void *buf, size_t num){
+	ssize_t res;
+	size_t n;
+	char *ptr;
+
+
+	n = num;
+	ptr = (char*)buf;
+	while (n > 0) {
+		if ((res = read(fd, ptr, n)) == -1) {
+			if (errno == EINTR)
+				res = 0;
+			else
+				return (-1);
+		}
+		else if (res == 0)
+			break;
+
+
+		ptr += res;
+		n -= res;
+	}
+
+
+	return (num - n);
+}
+
 

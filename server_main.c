@@ -2,7 +2,9 @@
 #include "print.h"
 #include "apue.h"
 #include "print.c"
-
+//#include "my_err.h"
+//#include "my_log.h"
+//#include <asm/rwlock.h>
 void init_request(void) {
 	int n;
 	char name[FILENMSZ];
@@ -25,20 +27,6 @@ void init_request(void) {
 	}else{
 		nextjob = atol(name);
 	}
-}
-
-void init_printer(void) {
-	printer = get_printaddr();
-	if (printer == NULL) {
-		log_msg("no printer device registered");
-		exit(-1);
-	}
-
-	printer_name = printer->ai_canonname;
-	if (printer_name == NULL) {
-		printer_name = "printer";
-	}
-	log_msg("printer is %s", printer_name);
 }
 
 int initserver() {
@@ -173,7 +161,7 @@ int main(int argc, char *argv[]) {
 	#endif
 	n = HOST_NAME_MAX;
 
-	if ((host = malloc(n)) == NULL) {
+	if ((host = (char *)malloc(n)) == NULL) {
 		log_sys("malloc error");
 	}
 

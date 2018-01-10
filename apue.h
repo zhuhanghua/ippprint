@@ -1,4 +1,7 @@
- 
+#ifndef _APUE_H_
+#define _APUE_H_
+
+
 #include <fcntl.h>
 #include <pwd.h>
 #include <sys/stat.h>
@@ -16,5 +19,5 @@
 #include <dirent.h>
 #include <stdint.h>
 #include <stddef.h>
-#include "my_err.h"
-#include "my_log.h"
+
+#endif // !1
