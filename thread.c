@@ -175,7 +175,7 @@ void* printer_thread(void *arg) {
 			close(fd);
 			continue;
 		}
-
+		/*SOCK_STREAM 流服务(TCP)， SOCK_UGRAM 数据报服务（UDP）*/
 		if ((sockfd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
 			log_msg("job %ld deferred - can't create socket: %s",
 			jp->jobid, strerror(errno));
@@ -196,7 +196,7 @@ void* printer_thread(void *arg) {
 		hlen = iov[0].iov_len;
 		ilen = iov[1].iov_len;
 
-		if ((nw = writev(sockfd, (const iovec*)iov, 2)) != hlen + ilen) {
+		if ((nw = writev(sockfd, (const struct iovec*)iov, 2)) != hlen + ilen) {
 			log_ret("can't write to printer");
 			goto defer;
 		}

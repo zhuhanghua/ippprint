@@ -81,6 +81,9 @@ void client_cleanup(void * arg) {
     }
 
     pthread_mutex_unlock(&workerlock);
+
+    //关闭线程用于与客户端通信的套接字文件描述符，
+    //然后释放worker_thread结构的内存
     if (wtp != NULL) {
         close(wtp->sockfd);
         free(wtp);

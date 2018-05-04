@@ -26,7 +26,7 @@ char* add_option(char* cp, int tag, char* optname, char *optval) {
 		char c[2];
 	}u;
 
-	*cp ++ = tag;
+	*cp++ = tag;
 	n = strlen(optname);
 	u.s = htons(n);
 	*cp ++= u.c[0];

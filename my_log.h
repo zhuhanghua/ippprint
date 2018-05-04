@@ -4,6 +4,13 @@
 #include <stdarg.h>  
 #include <syslog.h>  
 #include "ourhdr.h"  
+/**
+ * 应用程序使用syslog函数与rsyslogd守护进程通信
+ * 配置文件是/etc/rsyslog.conf
+ * 默认情况下，调试信息会保存至/var/log/debug文件
+ * 普通信息保存至/var/log/messages文件
+ * 内核消息则保存至/var/log/kern.log文件
+ */
 
 static void log_doit(int, int, const char*, va_list ap);
 
@@ -60,9 +67,9 @@ static void log_doit(int errnoflag, int priority, const char *fmt, va_list ap){
 		fputs(buf, stderr);
 		fflush(stderr);
 		
-	}
-	else
+	}else{
 		syslog(priority, buf);
+	}
 	return;
 }
 

@@ -42,8 +42,8 @@ extern char* get_printserver(void);
 extern struct addrinfo *get_printaddr(void);
 extern ssize_t tread(int, void *, size_t, unsigned int);
 extern ssize_t treadn(int, void*, size_t, unsigned int);
-extern int connect_retry(int, const struct sockaddr*, int);
-extern int initserver(int, struct sockadr*, socklen_t, int);
+extern int connect_retry(int, const struct sockaddr*,  socklen_t);
+extern int initserver();
 extern ssize_t writen(int fd, const void *buf, size_t num);
 extern ssize_t readn(int fd, void *buf, size_t num);
 

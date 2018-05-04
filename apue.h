@@ -19,5 +19,7 @@
 #include <dirent.h>
 #include <stdint.h>
 #include <stddef.h>
-
+#include <sys/signal.h>
+#include <sys/uio.h>
+#include <netdb.h>
 #endif // !1

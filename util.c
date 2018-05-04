@@ -13,22 +13,25 @@
 
 int getaddrlist(const char *host, const char *service, struct addrinfo **ailistpp) {
     int err;
-    struct addrinfo hint;
+    struct addrinfo *hint = (struct addrinfo*)malloc(sizeof(struct addrinfo));
 
-    hint.ai_flags = AI_CANONNAME;
-    hint.ai_family = AF_INET;
-    hint.ai_socktype = SOCK_STREAM;
-    hint.ai_protocol = 0;
-    hint.ai_addrlen = 0;
-    hint.ai_canonname = NULL;
-    hint.ai_addr = NULL;
-    hint.ai_next = NULL;
-    err = getaddrinfo(host, service, &hint, ailistpp);
+    hint->ai_flags = AI_CANONNAME;
+	hint->ai_family = AF_INET;
+	hint->ai_socktype = SOCK_STREAM;
+	hint->ai_protocol = 0;
+	hint->ai_addrlen = 0;
+	hint->ai_canonname = NULL;
+	hint->ai_addr = NULL;
+	hint->ai_next = NULL;
+    err = getaddrinfo(host, service, hint, ailistpp);
+
+	free(hint);
+
     return (err);
 }
 
 /**
- * ÔÚ´òÓ¡ÅäÖÃÎÄ¼şÖĞËÑË÷Ö¸¶¨µÄ¹Ø¼ü×Ö
+ * åœ¨æ‰“å°é…ç½®æ–‡ä»¶ä¸­æœç´¢æŒ‡å®šçš„å…³é”®å­—
  */
 static char *
 scan_configfile(char* keyword) {
@@ -64,19 +67,19 @@ scan_configfile(char* keyword) {
 }
 
 /** 
- * ÕÒµ½ÔËĞĞ´òÓ¡¼ÙÍÑ»úÊØ»¤½ø³ÌµÄ¼ÆËã»úÏµÍ³µÄÃû×Ö
+ * æ‰¾åˆ°è¿è¡Œæ‰“å°å‡è„±æœºå®ˆæŠ¤è¿›ç¨‹çš„è®¡ç®—æœºç³»ç»Ÿçš„åå­—
 */
 char* get_printserver(void) {
     return (scan_configfile((char *)"printserver"));
 }
 
 /**
- * »ñÈ¡ÍøÂç´òÓ¡»úµÄµØÖ·
+ * è·å–ç½‘ç»œæ‰“å°æœºçš„åœ°å€
 */
 struct addrinfo* get_printaddr(void) {
     int err;
     char *p;
-    struct addrinfo **ailist;
+    struct addrinfo **ailist = NULL;
 
     if ((p = scan_configfile((char *)"printer")) != NULL) {
         if ((err = getaddrlist(p, (char *)"ipp", ailist)) != 0) {
@@ -93,7 +96,7 @@ struct addrinfo* get_printaddr(void) {
 }
 
 /**
- ¶ÁÈ¡Ö¸¶¨µÄ×Ö½ÚÊı£¬ÔÚ·ÅÆúÒÔÇ°ÖÁ¶à×èÈûtimeoutÃë
+ è¯»å–æŒ‡å®šçš„å­—èŠ‚æ•°ï¼Œåœ¨æ”¾å¼ƒä»¥å‰è‡³å¤šé˜»å¡timeoutç§’
  */
 ssize_t tread(int fd, void *buf, size_t nbytes, unsigned int timout){
     int nfds;
@@ -105,22 +108,28 @@ ssize_t tread(int fd, void *buf, size_t nbytes, unsigned int timout){
     FD_ZERO(&readfds);
     FD_SET(fd, &readfds);
 
-    /*Ê¹ÓÃselect ÓÃÓÚÈ·¶¨Ò»¸ö»òÕß¶à¸öÌ×½Ó×ÖµÄ×´Ì¬£¬µÈ´ıÖ¸¶¨µÄÎÄ¼şÃèÊö·û¿É¶Á*/
+    /*ä½¿ç”¨select ç”¨äºç¡®å®šä¸€ä¸ªæˆ–è€…å¤šä¸ªå¥—æ¥å­—çš„çŠ¶æ€ï¼Œç­‰å¾…æŒ‡å®šçš„æ–‡ä»¶æè¿°ç¬¦å¯è¯»*/
     nfds = select(fd+1, &readfds, NULL, NULL, &tv);
     if (nfds <= 0) {
 
         if (nfds == 0){
-            errno = ETIME;//³¬Ê±
+            errno = ETIME;//ç­‰å¾…è¶…æ—¶
         }
 
-        return -1;
+        return -1;//ç½‘ç»œé”™è¯¯
     }
+
+    //nfds > 0 ç­‰åˆ°æœŸæœ›çš„äº‹ä»¶
 
     return (read(fd, buf, nbytes));
 }
 
 /**
- *Ìá¹©treadµÄ±äÌå, ½Ğ×ötreadn, ËüÖ»ÕıºÃ¶ÁÈ¡ÇëÇóµÄ×Ö½ÚÊı(¿ÉÒÔ·À²ğ°ü)
+ *æä¾›treadçš„å˜ä½“, å«åštreadn, å®ƒåªæ­£å¥½è¯»å–è¯·æ±‚çš„å­—èŠ‚æ•°(å¯ä»¥é˜²æ‹†åŒ…)
+ */
+/**
+ * è¯»å–nbytesä¸ªå­—èŠ‚ï¼Œå¦‚æœè¿”å›å€¼nbytesä¸ªå­—èŠ‚ï¼Œè¯´æ˜è¯»å–å¤±è´¥ã€‚æœ‰å¯èƒ½æ˜¯å¯¹æ–¹å…³é—­è¿æ¥ã€‚
+ * å¦‚æœå¯¹æ–¹å…³é—­è¿æ¥ï¼Œåˆ™treadè¿”å›å€¼ä¸º0ã€‚
  */
 ssize_t
 treadn(int fd, void *buf, size_t nbytes, unsigned int timeout) {
@@ -154,7 +163,7 @@ ssize_t writen(int fd, const void *buf, size_t num){
 	n = num;  
 	ptr = (const char *)buf;  
 	while (n > 0) {  
-		/* ¿ªÊ¼Ğ´*/   
+		/* å¼€å§‹å†™*/   
 		if ((res = write(fd, ptr, n)) <= 0) {  
 			if (errno == EINTR)  
 			res = 0;  
@@ -163,7 +172,7 @@ ssize_t writen(int fd, const void *buf, size_t num){
 		}  
 
 
-		ptr += res;/* ´ÓÊ£ÏÂµÄµØ·½¼ÌĞøĞ´     */   
+		ptr += res;/* ä»å‰©ä¸‹çš„åœ°æ–¹ç»§ç»­å†™     */   
 		n -= res;  
 	}  
   

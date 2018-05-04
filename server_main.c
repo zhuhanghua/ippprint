@@ -35,7 +35,8 @@ int initserver() {
 	int err;
     int reuse = 1;
 	//创建tcp套接字
-	int sockfd = socket(AF_INET, SOCK_STREAM, 0);//tcp 协议: 面向连接
+	//tcp 协议: 面向连接,字节流的可靠性协议，不存在丢包问题，但会存在粘包问题
+	int sockfd = socket(AF_INET, SOCK_STREAM, 0);
     if(sockfd < 0){
         perror("socket");
         return -1;
@@ -88,7 +89,7 @@ void build_qonstart(void) {
 	if ((dirp = opendir(dname)) == NULL)
 		return;
 	
-	while((entp = readdir(dirp, ".")) != NULL) {
+	while((entp = readdir(dirp)) != NULL) {
 		if (strcmp(entp->d_name, ".") == 0 || strcmp(entp->d_name, "..") == 0) {
 			continue;
 		}
@@ -179,7 +180,7 @@ int main(int argc, char *argv[]) {
 
 	maxfd = -1;
 	for (aip = ailist; aip != NULL; aip = aip->ai_next){
-		//建立服务端socket
+		//建立服务端socket，监听连接请求
 		if ((sockfd = initserver(SOCK_STREAM, aip->ai_addr, aip->ai_addrlen, QLEN)) >= 0) {
 			FD_SET(sockfd, &rendezvous);//将其文件描述符加入fd_set
 			if (sockfd > maxfd) {
@@ -205,7 +206,8 @@ int main(int argc, char *argv[]) {
 	}
 
 	//创建一个处理打印机通信的线程
-	int iRet = pthread_create(&tid, NULL, printer_thread, NULL);/*参数依次是: 创建的线程id， 线程参数，调用函数名，传入的函数参数*/
+	/*参数依次是: 创建的线程id， 线程参数，调用函数名，传入的函数参数*/
+	int iRet = pthread_create(&tid, NULL, printer_thread, NULL);
 	if(iRet) {
 		printf("phread_create error: iRet=%d\n", iRet);
 		exit(1);
@@ -227,11 +229,11 @@ int main(int argc, char *argv[]) {
 
 		for (i = 0; i < maxfd; i ++) {
 			//一个可读的文件描述符就意味着一个连接请求需要处理
-			if (FD_ISSET(i, &rset)) {
-				//使用accept接受该连接请求
+			if (FD_ISSET(i, &rset)) {//需要判断第i个文件描述符是否就绪
+				//使用accept接受该连接请求，即从listen队列中取出一个连接
 				sockfd = accept(i, NULL, NULL);
 				if (sockfd < 0) {
-					log_ret("accept failed");//如果失败，则记录日志继续检查更多的可读文件描述符
+					log_ret("accept failed");//如果失败，则记录日志并继续检查更多的可读文件描述符
 				}
 
 				pthread_create(&tid, NULL, client_thread, (void*)sockfd);//创建一个线程来处理客户端的请求

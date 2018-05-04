@@ -13,6 +13,9 @@ void submit_file(int, int, const char*, size_t, int);
 
 #define MAXSLEEP 128
 
+//指数补偿算法：
+//如果调用connect失败，进程就休眠一小段时间然后再进行尝试，
+//每循环一次增加每次尝试的延迟，直到延迟为分钟
 int connect_retry(int sockfd, const struct sockaddr *addr, socklen_t alen)
 {
     int nsec;

@@ -7,16 +7,16 @@
 
 extern int log_to_stderr;
 extern int debug;
-extern struct addrinfo *printer;//±£´æ´òÓ¡»úµÄÍøÂçµØÖ·
-extern char  *printer_name;//±£´æ´òÓ¡»úµÄÖ÷»úÃû×Ö
-extern pthread_mutex_t  configlock;//ÓÃÓÚ±£»¤¶Ôreread±äÁ¿µÄ·ÃÎÊ
+extern struct addrinfo *printer;//ï¿½ï¿½ï¿½ï¿½ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ö·
+extern char  *printer_name;//ï¿½ï¿½ï¿½ï¿½ï¿½Ó¡ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
+extern pthread_mutex_t  configlock;//ï¿½ï¿½ï¿½Ú±ï¿½ï¿½ï¿½ï¿½ï¿½rereadï¿½ï¿½ï¿½ï¿½ï¿½Ä·ï¿½ï¿½ï¿½
 extern int  reread;
 
 extern struct worker_thread *workers;
 extern pthread_mutex_t  workerlock;
 extern sigset_t mask;
 extern struct job  *jobhead, *jobtail;
-extern int  jobfd;	//jobfdÊÇ×÷ÒµÎÄ¼þµÄÎÄ¼þÃèÊö·û
+extern int  jobfd;	//jobfdï¿½ï¿½ï¿½ï¿½Òµï¿½Ä¼ï¿½ï¿½ï¿½ï¿½Ä¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 
 extern long nextjob;
 extern pthread_mutex_t  joblock;
@@ -65,7 +65,7 @@ void add_job(struct printreq *reqp, long jobid) {
 
 	jobtail = jp;
 	pthread_mutex_unlock(&joblock);
-	pthread_cond_signal(&jobwait);//ä¿¡å·é”ï¼Œé€šçŸ¥ç­‰å¾…æ‰“å°çš„çº¿ï¿?
+	pthread_cond_signal(&jobwait);//ä¿¡å·é”ï¼Œé€šçŸ¥ç­‰å¾…æ‰“å°çš„çº¿ç¨‹
 }
 
 /**
@@ -88,7 +88,7 @@ void replace_job(struct job* jp) {
 
 /**
  * å°†ä½œä¸šä»ŽæŒ‚èµ·çš„ä½œä¸šåˆ—è¡¨ä¸­åˆ é™¤
- * è°ƒç”¨è€…å¿…é¡»æŒæœ‰joblockäº’æ–¥ï¿?
+ * è°ƒç”¨è€…å¿…é¡»æŒæœ‰joblockäº’æ–¥
  */
 void remove_job(struct job *target) {
 	if (target->next != NULL) {

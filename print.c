@@ -16,7 +16,7 @@ int  reread;
 struct worker_thread *workers;
 pthread_mutex_t  workerlock = PTHREAD_MUTEX_INITIALIZER;
 sigset_t mask;
-struct job  *jobhead, *jobtail;
+struct job  *jobhead, *jobtail;//工作队列
 int  jobfd;	//jobfd是作业文件的文件描述符
 
 long nextjob;
